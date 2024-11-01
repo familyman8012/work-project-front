@@ -54,7 +54,7 @@ const App = observer(({ Component, pageProps }: AppProps) => {
           theme="light"
         />
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={true} />
     </QueryClientProvider>
   );
 });

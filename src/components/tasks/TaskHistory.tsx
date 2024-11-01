@@ -32,13 +32,8 @@ export default function TaskHistory({ taskId }: TaskHistoryProps) {
   const { data: history = [], isLoading } = useQuery<TaskHistory[]>({
     queryKey: ["taskHistory", taskId],
     queryFn: async () => {
-      try {
-        const response = await client.get(`/api/task-history/?task=${taskId}`);
-        return response.data.results || [];
-      } catch (error) {
-        console.error("History API Error:", error);
-        return [];
-      }
+      const response = await client.get(`/api/task-history/?task=${taskId}`);
+      return response.data.results;
     },
   });
 
@@ -77,7 +72,7 @@ export default function TaskHistory({ taskId }: TaskHistoryProps) {
       </Typography>
 
       <List>
-        {history.map((item) => (
+        {history?.map((item) => (
           <ListItem
             key={item.id}
             sx={{

@@ -57,10 +57,10 @@ function TaskDetailPage() {
     },
     onSuccess: () => {
       // 작업 정보와 히스토리를 함께 갱신
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["task", id] }),
-        queryClient.invalidateQueries({ queryKey: ["taskHistory", id] }),
-      ]);
+
+      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      queryClient.invalidateQueries({ queryKey: ["taskHistory", id] });
+
       setEditMode(false);
       setError(null);
     },

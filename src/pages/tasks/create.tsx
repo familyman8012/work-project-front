@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Paper,
@@ -55,6 +55,8 @@ function CreateTaskPage() {
   const [form, setForm] = useState<CreateTaskForm>(initialForm);
   const [error, setError] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
+
   // 부서 목록 조회
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
@@ -102,6 +104,8 @@ function CreateTaskPage() {
     },
     onSuccess: (response) => {
       toast.success("작업이 성공적으로 생성되었습니다!");
+
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
       router.push(`/tasks`);
     },
     onError: (error: any) => {
@@ -215,8 +219,8 @@ function CreateTaskPage() {
                     <MenuItem disabled>부서를 먼저 선택해주세요</MenuItem>
                   ) : isUsersLoading ? (
                     <MenuItem disabled>로딩중...</MenuItem>
-                  ) : users?.length > 0 ? (
-                    users.map((user: any) => (
+                  ) : users?.results.length > 0 ? (
+                    users.results.map((user: any) => (
                       <MenuItem key={user.id} value={user.id}>
                         {user.username} ({user.rank})
                       </MenuItem>
