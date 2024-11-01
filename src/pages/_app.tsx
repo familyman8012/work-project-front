@@ -10,6 +10,8 @@ import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
 import { Box, CircularProgress } from "@mui/material";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = observer(({ Component, pageProps }: AppProps) => {
   useEffect(() => {
@@ -39,6 +41,18 @@ const App = observer(({ Component, pageProps }: AppProps) => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Component {...pageProps} />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

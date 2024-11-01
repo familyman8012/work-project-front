@@ -23,6 +23,8 @@ import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
 import { TaskPriority, TaskStatus } from "@/types/type";
+import { authStore } from "@/stores/AuthStore";
+import { toast } from "react-toastify";
 
 interface CreateTaskForm {
   title: string;
@@ -63,30 +65,50 @@ function CreateTaskPage() {
   });
 
   // 사용자 목록 조회
-  const { data: users = [] } = useQuery({
-    queryKey: ["users"],
+  const { data: users = [], isLoading: isUsersLoading } = useQuery({
+    queryKey: ["users", form.department],
     queryFn: async () => {
-      const response = await client.get("/api/users/");
-      return response.data.results;
+      try {
+        const params = new URLSearchParams();
+        if (form.department) {
+          params.append("department", String(form.department));
+        }
+        const response = await client.get(`/api/users/?${params.toString()}`);
+        console.log("Users API Response:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Users API Error:", error);
+        return [];
+      }
     },
+    enabled: !!form.department,
   });
 
   // 작업 생성 mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: CreateTaskForm) => {
-      return await client.post("/api/tasks/", {
-        ...data,
-        start_date: data.start_date?.toISOString(),
-        due_date: data.due_date?.toISOString(),
-      });
+      try {
+        const response = await client.post("/api/tasks/", {
+          ...data,
+          start_date: data.start_date?.toISOString(),
+          due_date: data.due_date?.toISOString(),
+          reporter: authStore.user?.id,
+        });
+        return response.data;
+      } catch (error: any) {
+        console.error("Create Task Error:", error.response?.data);
+        throw error;
+      }
     },
     onSuccess: (response) => {
-      router.push(`/tasks/${response.data.id}`);
+      toast.success("작업이 성공적으로 생성되었습니다!");
+      router.push(`/tasks`);
     },
     onError: (error: any) => {
-      setError(
-        error.response?.data?.detail || "작업 생성 중 오류가 발생했습니다."
-      );
+      const errorMessage =
+        error.response?.data?.detail || "작업 생성 중 오류가 발생했습니다.";
+      toast.error(errorMessage);
+      setError(errorMessage);
     },
   });
 
@@ -113,6 +135,14 @@ function CreateTaskPage() {
     }
 
     createTaskMutation.mutate(form);
+  };
+
+  const handleDepartmentChange = (departmentId: number) => {
+    setForm((prev) => ({
+      ...prev,
+      department: departmentId,
+      assignee: 0,
+    }));
   };
 
   return (
@@ -157,7 +187,9 @@ function CreateTaskPage() {
                 <Select
                   value={form.department || ""}
                   label="부서"
-                  onChange={(e) => handleChange("department", e.target.value)}
+                  onChange={(e) =>
+                    handleDepartmentChange(e.target.value as number)
+                  }
                 >
                   {departments.map((dept: any) => (
                     <MenuItem key={dept.id} value={dept.id}>
@@ -175,13 +207,21 @@ function CreateTaskPage() {
                   value={form.assignee || ""}
                   label="담당자"
                   onChange={(e) => handleChange("assignee", e.target.value)}
+                  disabled={!form.department}
                 >
-                  {users.map((user: any) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.first_name} {user.last_name} ({user.department_name}
-                      )
-                    </MenuItem>
-                  ))}
+                  {!form.department ? (
+                    <MenuItem disabled>부서를 먼저 선택해주세요</MenuItem>
+                  ) : isUsersLoading ? (
+                    <MenuItem disabled>로딩중...</MenuItem>
+                  ) : users?.length > 0 ? (
+                    users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.first_name} {user.last_name} ({user.rank})
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>해당 부서에 사용자가 없습니다</MenuItem>
+                  )}
                 </Select>
               </FormControl>
             </Grid>
