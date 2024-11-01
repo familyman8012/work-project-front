@@ -55,12 +55,18 @@ function TaskDetailPage() {
       const response = await client.patch(`/api/tasks/${id}/`, updatedTask);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // 작업 정보와 히스토리를 함께 갱신
-
-      queryClient.invalidateQueries({ queryKey: ["task", id] });
-      queryClient.invalidateQueries({ queryKey: ["taskHistory", id] });
-
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["task", id] }),
+        queryClient.invalidateQueries({
+          queryKey: ["taskHistory", Number(id)],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ["taskHistory", Number(id)],
+          exact: true,
+        }),
+      ]);
       setEditMode(false);
       setError(null);
     },
@@ -72,19 +78,35 @@ function TaskDetailPage() {
   });
 
   const handleStatusChange = async (newStatus: TaskStatus) => {
-    await updateTaskMutation.mutateAsync({ status: newStatus });
+    try {
+      await updateTaskMutation.mutateAsync({ status: newStatus });
+    } catch (error) {
+      console.error("Status update failed:", error);
+    }
   };
 
-  const handlePriorityChange = (newPriority: TaskPriority) => {
-    updateTaskMutation.mutate({ priority: newPriority });
+  const handlePriorityChange = async (newPriority: TaskPriority) => {
+    try {
+      await updateTaskMutation.mutateAsync({ priority: newPriority });
+    } catch (error) {
+      console.error("Priority update failed:", error);
+    }
   };
 
-  const handleActualHoursChange = (hours: number) => {
-    updateTaskMutation.mutate({ actual_hours: hours });
+  const handleActualHoursChange = async (hours: number) => {
+    try {
+      await updateTaskMutation.mutateAsync({ actual_hours: hours });
+    } catch (error) {
+      console.error("Hours update failed:", error);
+    }
   };
 
-  const handleDifficultyChange = (difficulty: TaskDifficulty) => {
-    updateTaskMutation.mutate({ difficulty });
+  const handleDifficultyChange = async (difficulty: TaskDifficulty) => {
+    try {
+      await updateTaskMutation.mutateAsync({ difficulty });
+    } catch (error) {
+      console.error("Difficulty update failed:", error);
+    }
   };
 
   const handleAssigneeChange = async (newAssignee: number) => {

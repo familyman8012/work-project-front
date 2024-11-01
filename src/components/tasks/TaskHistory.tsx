@@ -29,12 +29,16 @@ interface TaskHistoryProps {
 }
 
 export default function TaskHistory({ taskId }: TaskHistoryProps) {
-  const { data: history = [], isLoading } = useQuery<TaskHistory[]>({
+  const { data: history, isLoading } = useQuery<{ results: TaskHistory[] }>({
     queryKey: ["taskHistory", taskId],
     queryFn: async () => {
       const response = await client.get(`/api/task-history/?task=${taskId}`);
-      return response.data.results;
+      return response.data;
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const getStatusText = (status: string) => {
@@ -72,7 +76,7 @@ export default function TaskHistory({ taskId }: TaskHistoryProps) {
       </Typography>
 
       <List>
-        {history?.map((item) => (
+        {history?.results.map((item: TaskHistory) => (
           <ListItem
             key={item.id}
             sx={{
