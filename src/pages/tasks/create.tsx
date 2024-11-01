@@ -145,6 +145,8 @@ function CreateTaskPage() {
     }));
   };
 
+  console.log("users", users);
+
   return (
     <Layout>
       <Box sx={{ p: 3 }}>
@@ -216,7 +218,7 @@ function CreateTaskPage() {
                   ) : users?.length > 0 ? (
                     users.map((user: any) => (
                       <MenuItem key={user.id} value={user.id}>
-                        {user.first_name} {user.last_name} ({user.rank})
+                        {user.username} ({user.rank})
                       </MenuItem>
                     ))
                   ) : (
@@ -245,13 +247,12 @@ function CreateTaskPage() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                type="number"
+                type="text"
                 label="예상 소요 시간"
                 value={form.estimated_hours}
                 onChange={(e) =>
                   handleChange("estimated_hours", Number(e.target.value))
                 }
-                InputProps={{ inputProps: { min: 0, step: 0.5 } }}
               />
             </Grid>
 

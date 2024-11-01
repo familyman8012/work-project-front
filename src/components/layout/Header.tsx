@@ -18,6 +18,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/api/client";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Header = observer(() => {
   const router = useRouter();
@@ -79,13 +80,7 @@ const Header = observer(() => {
 
         {authStore.isAuthenticated && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {/* 알림 아이콘 */}
-            <IconButton color="inherit" onClick={handleNotificationClick}>
-              <Badge badgeContent={notificationCount?.count || 0} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
-
+            <NotificationDropdown />
             {/* 사용자 프로필 */}
             <Box
               onClick={handleProfileClick}

@@ -14,7 +14,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import ko from "date-fns/locale/ko";
-import { TaskStatus, TaskPriority } from "@/types";
+import { TaskStatus, TaskPriority } from "@/types/type";
 
 interface TaskFiltersProps {
   filters: {

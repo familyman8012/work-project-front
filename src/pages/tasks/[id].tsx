@@ -14,6 +14,10 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
@@ -23,6 +27,8 @@ import { format } from "date-fns";
 import TaskComments from "@/components/tasks/TaskComments";
 import TaskTimeLog from "@/components/tasks/TaskTimeLog";
 import TaskHistory from "@/components/tasks/TaskHistory";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { toast } from "react-toastify";
 
 function TaskDetailPage() {
   const router = useRouter();
@@ -30,6 +36,7 @@ function TaskDetailPage() {
   const queryClient = useQueryClient();
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // 작업 상세 정보 조회
   const { data: task, isLoading } = useQuery<Task>({
@@ -84,6 +91,34 @@ function TaskDetailPage() {
     await updateTaskMutation.mutateAsync({ assignee: newAssignee });
   };
 
+  // 작업 삭제 mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async () => {
+      await client.delete(`/api/tasks/${id}/`);
+    },
+    onSuccess: () => {
+      // 작업 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      // 작업 상세 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      toast.success("작업이 삭제되었습니다.");
+      router.push("/tasks");
+    },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.detail || "작업 삭제 중 오류가 발생했습니다."
+      );
+    },
+  });
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteTaskMutation.mutate();
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -113,6 +148,23 @@ function TaskDetailPage() {
     <Layout>
       <Box p={3}>
         <Paper sx={{ p: 3 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
+            <Typography variant="h5">{task.title}</Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteClick}
+            >
+              작업 삭제
+            </Button>
+          </Box>
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -239,6 +291,30 @@ function TaskDetailPage() {
       <Box sx={{ mt: 4 }}>
         <TaskComments taskId={task.id} />
       </Box>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>작업 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>
+            이 작업을 삭제하시겠습니까? 이 작업과 관련된 모든 데이터(코멘트,
+            시간 기록, 히스토리 등)가 함께 삭제됩니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>취소</Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            disabled={deleteTaskMutation.isPending}
+          >
+            {deleteTaskMutation.isPending ? "삭제 중..." : "삭제"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 }
