@@ -28,24 +28,16 @@ import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-
-interface Notification {
-  id: number;
-  recipient: number;
-  notification_type: string;
-  task: number;
-  task_title: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-}
+import { Notification, PaginatedResponse } from "@/types/notification";
 
 function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const queryClient = useQueryClient();
 
   // 알림 목록 조회
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
+  const { data: notificationsData, isLoading } = useQuery<
+    PaginatedResponse<Notification>
+  >({
     queryKey: ["notifications", filter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -53,9 +45,11 @@ function NotificationsPage() {
         params.append("is_read", filter === "read" ? "true" : "false");
       }
       const response = await client.get(`/api/notifications/?${params}`);
-      return response.data.results;
+      return response.data;
     },
   });
+
+  const notifications = notificationsData?.results || [];
 
   // 알림 읽음 처리
   const markAsReadMutation = useMutation({
