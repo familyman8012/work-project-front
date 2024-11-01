@@ -29,13 +29,20 @@ const drawerWidth = 280;
 
 const menuItems = [
   { text: "대시보드", icon: <Dashboard />, path: "/" },
-  { text: "작업 관리", icon: <Assignment />, path: "/tasks" },
   { text: "내 작업", icon: <AssignmentTurnedIn />, path: "/my-tasks" },
   { text: "일정", icon: <Schedule />, path: "/schedule" },
-  { text: "직원 관리", icon: <People />, path: "/users" },
   { text: "알림", icon: <Notifications />, path: "/notifications" },
-  { text: "통계", icon: <Assessment />, path: "/statistics" },
+ 
+
+];
+
+const menuItems1 = [
+
+  { text: "작업 관리", icon: <Assignment />, path: "/tasks" },
+  { text: "직원 관리", icon: <People />, path: "/users" },
   { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
+  { text: "통계", icon: <Assessment />, path: "/statistics" },
+
 ];
 
 const Sidebar = observer(() => {
@@ -83,6 +90,51 @@ const Sidebar = observer(() => {
         <Divider />
         <List>
           {menuItems.map((item) => {
+            const isActive = router.pathname === item.path;
+
+            return (
+              <Link
+                href={item.path}
+                key={item.text}
+                passHref
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <ListItem disablePadding>
+                  <ListItemButton
+                    selected={isActive}
+                    sx={{
+                      "&.Mui-selected": {
+                        backgroundColor: "primary.main",
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "primary.dark",
+                        },
+                        "& .MuiListItemIcon-root": {
+                          color: "white",
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color: isActive ? "white" : "inherit",
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </Link>
+            );
+          })}
+          <Divider />
+          {menuItems1.map((item) => {
             const isActive = router.pathname === item.path;
 
             return (

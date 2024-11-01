@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { User } from "@/types";
+import { User } from "@/types/type";
 import { client } from "@/lib/api/client";
 
 class AuthStore {
