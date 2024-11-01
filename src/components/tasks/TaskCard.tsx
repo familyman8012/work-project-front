@@ -1,4 +1,4 @@
-import { Task, TaskStatus } from "@/types";
+import { Task, TaskStatus } from "@/types/type";
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ interface TaskCardProps {
 }
 
 const getStatusColor = (status: TaskStatus) => {
-  const colors = {
+  const colors: Record<TaskStatus, string> = {
     TODO: "#9e9e9e",
     IN_PROGRESS: "#1976d2",
     REVIEW: "#ed6c02",
