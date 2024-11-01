@@ -18,6 +18,7 @@ import {
   AssignmentTurnedIn,
   Schedule,
   Assessment,
+  GradeRounded,
 } from "@mui/icons-material";
 import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
@@ -34,6 +35,7 @@ const menuItems = [
   { text: "직원 관리", icon: <People />, path: "/users" },
   { text: "알림", icon: <Notifications />, path: "/notifications" },
   { text: "통계", icon: <Assessment />, path: "/statistics" },
+  { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
 ];
 
 const Sidebar = observer(() => {

@@ -53,11 +53,32 @@ function UserDetailPage() {
   });
 
   // 현재 진행중인 작업 목록
-  const { data: currentTasks = [] } = useQuery({
+  const { data: currentTasks, isLoading: isTasksLoading } = useQuery({
     queryKey: ["userCurrentTasks", id],
     queryFn: async () => {
-      const response = await client.get(`/api/users/${id}/tasks_current/`);
-      return response.data;
+      const response = await client.get(`/api/tasks/`, {
+        params: {
+          assignee: id,
+          status: "IN_PROGRESS",
+        },
+      });
+      return response.data.results;
+    },
+    enabled: !!id,
+  });
+
+  // 지연된 작업 목록 추가
+  const { data: delayedTasks } = useQuery({
+    queryKey: ["userDelayedTasks", id],
+    queryFn: async () => {
+      const response = await client.get(`/api/tasks/`, {
+        params: {
+          assignee: id,
+          is_delayed: true,
+          status_not: "DONE", // 완료된 작업은 제외
+        },
+      });
+      return response.data.results;
     },
     enabled: !!id,
   });
@@ -239,17 +260,34 @@ function UserDetailPage() {
         </Grid>
 
         {/* 현재 진행중인 작업 */}
-        <Paper sx={{ p: 3 }}>
+        <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             진행중인 작업
           </Typography>
-          {currentTasks.length > 0 ? (
+          {currentTasks?.length > 0 ? (
             currentTasks.map((task: any) => (
               <TaskCard key={task.id} task={task} />
             ))
           ) : (
             <Typography color="text.secondary">
               진행중인 작업이 없습니다.
+            </Typography>
+          )}
+        </Paper>
+
+        {/* 지연된 작업 섹션 추가 */}
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <Warning color="error" />
+            <Typography variant="h6">지연된 작업</Typography>
+          </Box>
+          {delayedTasks?.length > 0 ? (
+            delayedTasks.map((task: any) => (
+              <TaskCard key={task.id} task={task} />
+            ))
+          ) : (
+            <Typography color="text.secondary">
+              지연된 작업이 없습니다.
             </Typography>
           )}
         </Paper>

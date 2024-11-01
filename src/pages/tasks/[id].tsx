@@ -29,6 +29,7 @@ import TaskTimeLog from "@/components/tasks/TaskTimeLog";
 import TaskHistory from "@/components/tasks/TaskHistory";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import TaskEvaluation from "@/components/tasks/TaskEvaluation";
 
 function TaskDetailPage() {
   const router = useRouter();
@@ -313,6 +314,11 @@ function TaskDetailPage() {
       <Box sx={{ mt: 4 }}>
         <TaskComments taskId={task.id} />
       </Box>
+
+      {/* 작업 평가 섹션 추가 */}
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <TaskEvaluation taskId={Number(id)} />
+      </Paper>
 
       {/* 삭제 확인 다이얼로그 */}
       <Dialog
