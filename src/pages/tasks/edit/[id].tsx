@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,11 +22,11 @@ import { ko } from "date-fns/locale";
 import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
-import { TaskPriority, TaskStatus, TaskDifficulty } from "@/types/type";
+import { Task, TaskPriority, TaskStatus, TaskDifficulty } from "@/types/type";
 import { authStore } from "@/stores/AuthStore";
 import { toast } from "react-toastify";
 
-interface CreateTaskForm {
+interface EditTaskForm {
   title: string;
   description: string;
   status: TaskStatus;
@@ -36,28 +36,26 @@ interface CreateTaskForm {
   start_date: Date | null;
   due_date: Date | null;
   estimated_hours: number;
+  actual_hours?: number;
   difficulty: TaskDifficulty;
 }
 
-const initialForm: CreateTaskForm = {
-  title: "",
-  description: "",
-  status: "TODO",
-  priority: "MEDIUM",
-  assignee: 0,
-  department: 0,
-  start_date: null,
-  due_date: null,
-  estimated_hours: 0,
-  difficulty: "MEDIUM",
-};
-
-function CreateTaskPage() {
+function EditTaskPage() {
   const router = useRouter();
-  const [form, setForm] = useState<CreateTaskForm>(initialForm);
+  const { id } = router.query;
+  const [form, setForm] = useState<EditTaskForm | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   const queryClient = useQueryClient();
+
+  // 작업 상세 정보 조회
+  const { data: task, isLoading: isTaskLoading } = useQuery<Task>({
+    queryKey: ["task", id],
+    queryFn: async () => {
+      const response = await client.get(`/api/tasks/${id}/`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
 
   // 부서 목록 조회
   const { data: departments = [] } = useQuery({
@@ -70,63 +68,87 @@ function CreateTaskPage() {
 
   // 사용자 목록 조회
   const { data: users = [], isLoading: isUsersLoading } = useQuery({
-    queryKey: ["users", form.department],
+    queryKey: ["users", form?.department],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
-        if (form.department) {
+        if (form?.department) {
           params.append("department", String(form.department));
         }
         const response = await client.get(`/api/users/?${params.toString()}`);
-        console.log("Users API Response:", response.data);
         return response.data;
       } catch (error) {
         console.error("Users API Error:", error);
         return [];
       }
     },
-    enabled: !!form.department,
+    enabled: !!form?.department,
   });
 
-  // 작업 생성 mutation
-  const createTaskMutation = useMutation({
-    mutationFn: async (data: CreateTaskForm) => {
+  // 작업 수정 mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async (data: EditTaskForm) => {
       try {
-        const response = await client.post("/api/tasks/", {
+        const response = await client.patch(`/api/tasks/${id}/`, {
           ...data,
           start_date: data.start_date?.toISOString(),
           due_date: data.due_date?.toISOString(),
-          reporter: authStore.user?.id,
         });
         return response.data;
       } catch (error: any) {
-        console.error("Create Task Error:", error.response?.data);
+        console.error("Update Task Error:", error.response?.data);
         throw error;
       }
     },
-    onSuccess: (response) => {
-      toast.success("작업이 성공적으로 생성되었습니다!");
-
+    onSuccess: () => {
+      toast.success("작업이 성공적으로 수정되었습니다!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      router.push(`/tasks`);
+      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      router.push(`/tasks/${id}`);
     },
     onError: (error: any) => {
       const errorMessage =
-        error.response?.data?.detail || "작업 생성 중 오류가 발생했습니다.";
+        error.response?.data?.detail || "작업 수정 중 오류가 발생했습니다.";
       toast.error(errorMessage);
       setError(errorMessage);
     },
   });
 
-  const handleChange = (name: keyof CreateTaskForm, value: any) => {
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // 초기 데이터 설정
+  useEffect(() => {
+    if (task) {
+      setForm({
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        assignee: task.assignee,
+        department: task.department,
+        start_date: new Date(task.start_date),
+        due_date: new Date(task.due_date),
+        estimated_hours: task.estimated_hours,
+        actual_hours: task.actual_hours,
+        difficulty: task.difficulty,
+      });
+    }
+  }, [task]);
+
+  const handleChange = (name: keyof EditTaskForm, value: any) => {
+    if (!form) return;
+    
+    setForm((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form) return;
 
     // 필수 필드 검증
     if (
@@ -140,25 +162,43 @@ function CreateTaskPage() {
       return;
     }
 
-    createTaskMutation.mutate(form);
+    updateTaskMutation.mutate(form);
   };
 
   const handleDepartmentChange = (departmentId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      department: departmentId,
-      assignee: 0,
-    }));
+    if (!form) return;
+    
+    setForm((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        department: departmentId,
+        assignee: 0,
+      };
+    });
   };
 
-  console.log("users", users);
+  if (isTaskLoading || !form) {
+    return (
+      <Layout>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <CircularProgress />
+        </Box>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <Box sx={{ p: 3 }}>
         <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
-            새 작업 생성
+            작업 수정
           </Typography>
 
           {error && (
@@ -221,15 +261,32 @@ function CreateTaskPage() {
                     <MenuItem disabled>부서를 먼저 선택해주세요</MenuItem>
                   ) : isUsersLoading ? (
                     <MenuItem disabled>로딩중...</MenuItem>
-                  ) : users?.results.length > 0 ? (
+                  ) : users?.results?.length > 0 ? (
                     users.results.map((user: any) => (
                       <MenuItem key={user.id} value={user.id}>
-                        {user.username} ({user.rank})
+                        {user.last_name}{user.first_name} ({user.rank})
                       </MenuItem>
                     ))
                   ) : (
                     <MenuItem disabled>해당 부서에 사용자가 없습니다</MenuItem>
                   )}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>상태</InputLabel>
+                <Select
+                  value={form.status}
+                  label="상태"
+                  onChange={(e) => handleChange("status", e.target.value)}
+                >
+                  <MenuItem value="TODO">할 일</MenuItem>
+                  <MenuItem value="IN_PROGRESS">진행 중</MenuItem>
+                  <MenuItem value="REVIEW">검토</MenuItem>
+                  <MenuItem value="DONE">완료</MenuItem>
+                  <MenuItem value="HOLD">보류</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -253,13 +310,42 @@ function CreateTaskPage() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                type="text"
+                type="number"
                 label="예상 소요 시간"
                 value={form.estimated_hours}
                 onChange={(e) =>
                   handleChange("estimated_hours", Number(e.target.value))
                 }
               />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="실제 소요 시간"
+                value={form.actual_hours || ""}
+                onChange={(e) =>
+                  handleChange("actual_hours", Number(e.target.value))
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.5 } }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>난이도</InputLabel>
+                <Select
+                  value={form.difficulty}
+                  label="난이도"
+                  onChange={(e) => handleChange("difficulty", e.target.value)}
+                >
+                  <MenuItem value="EASY">쉬움</MenuItem>
+                  <MenuItem value="MEDIUM">보통</MenuItem>
+                  <MenuItem value="HARD">어려움</MenuItem>
+                  <MenuItem value="VERY_HARD">매우 어려움</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
 
             <LocalizationProvider
@@ -295,43 +381,27 @@ function CreateTaskPage() {
               </Grid>
             </LocalizationProvider>
 
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>난이도</InputLabel>
-                <Select
-                  value={form.difficulty}
-                  label="난이도"
-                  onChange={(e) => handleChange("difficulty", e.target.value)}
-                >
-                  <MenuItem value="EASY">쉬움</MenuItem>
-                  <MenuItem value="MEDIUM">보통</MenuItem>
-                  <MenuItem value="HARD">어려움</MenuItem>
-                  <MenuItem value="VERY_HARD">매우 어려움</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
             <Grid item xs={12}>
               <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
                 <Button
                   variant="outlined"
                   onClick={() => router.back()}
-                  disabled={createTaskMutation.isPending}
+                  disabled={updateTaskMutation.isPending}
                 >
                   취소
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={createTaskMutation.isPending}
+                  disabled={updateTaskMutation.isPending}
                 >
-                  {createTaskMutation.isPending ? (
+                  {updateTaskMutation.isPending ? (
                     <>
                       <CircularProgress size={20} sx={{ mr: 1 }} />
-                      생성 중...
+                      수정 중...
                     </>
                   ) : (
-                    "작업 생성"
+                    "저장"
                   )}
                 </Button>
               </Box>
@@ -343,4 +413,4 @@ function CreateTaskPage() {
   );
 }
 
-export default withAuth(CreateTaskPage);
+export default withAuth(EditTaskPage); 
