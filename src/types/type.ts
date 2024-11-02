@@ -39,10 +39,10 @@ export interface Task {
   updated_at: string;
   estimated_hours: number;
   actual_hours?: number;
-  difficulty: "LOW" | "MEDIUM" | "HIGH";
+  difficulty: "EASY" | "MEDIUM" | "HARD" | "VERY_HARD";
   is_delayed: boolean;
 }
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "HOLD";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type TaskDifficulty = "LOW" | "MEDIUM" | "HIGH";
+export type TaskDifficulty = "EASY" | "MEDIUM" | "HARD" | "VERY_HARD";

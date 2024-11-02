@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import {
@@ -25,6 +25,7 @@ import { Search } from "@mui/icons-material";
 import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
+import { authStore } from "@/stores/AuthStore";
 
 interface Filters {
   department: string;
@@ -50,9 +51,40 @@ const RANK_OPTIONS = [
 
 function UsersPage() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const user = authStore.user;
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // 초기 필터 상태 설정
+  const [filters, setFilters] = useState<Filters>(() => ({
+    department: user && (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER")
+      ? user.department.toString()
+      : "",
+    rank: "",
+    search: "",
+  }));
+
+  // 직원 목록 조회
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ["users", filters, page, rowsPerPage],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          params.append(key, value);
+        }
+      });
+
+      params.append("page", String(page + 1));
+      params.append("page_size", String(rowsPerPage));
+
+      console.log("API Request params:", params.toString());  // 디버깅용
+      const response = await client.get(`/api/users/?${params.toString()}`);
+      console.log("API Response:", response.data);  // 디버깅용
+      return response.data;
+    },
+  });
 
   // 부서 목록 조회
   const { data: departments = [] } = useQuery({
@@ -63,23 +95,36 @@ function UsersPage() {
     },
   });
 
-  // 직원 목록 조회
-  const { data: usersData, isLoading } = useQuery({
-    queryKey: ["users", filters, page, rowsPerPage],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-
-      if (filters.department) params.append("department", filters.department);
-      if (filters.rank) params.append("rank", filters.rank);
-      if (filters.search) params.append("search", filters.search);
-
-      params.append("page", String(page + 1));
-      params.append("page_size", String(rowsPerPage));
-
-      const response = await client.get(`/api/users/?${params.toString()}`);
-      return response.data;
-    },
-  });
+  // 부서 선택 옵션 구성
+  const getDepartmentOptions = () => {
+    if (!departments) return [];
+    
+    // 본부와 팀을 구분하여 표시
+    const mainDepts = departments.filter((d: any) => d.parent === null);
+    const options: JSX.Element[] = [];
+    
+    mainDepts.forEach((mainDept: any) => {
+      // 본부 추가
+      options.push(
+        <MenuItem key={mainDept.id} value={mainDept.id.toString()}>
+          {mainDept.name}
+        </MenuItem>
+      );
+      
+      // 산하 팀 추가 (들여쓰기로 구분)
+      const childDepts = departments.filter((d: any) => d.parent === mainDept.id);
+      childDepts.forEach((childDept: any) => {
+        options.push(
+          <MenuItem key={childDept.id} value={childDept.id.toString()}>
+            ㄴ {childDept.name}
+          </MenuItem>
+        );
+      });
+    });
+    
+    // 본부장/이사는 모든 부서를 볼 수 있음
+    return options;
+  };
 
   const handleFilterChange = (name: keyof Filters, value: string) => {
     setFilters((prev) => ({
@@ -102,6 +147,19 @@ function UsersPage() {
 
   const handleRowClick = (userId: number) => {
     router.push(`/users/${userId}`);
+  };
+
+  // 부서 검색 가능 여부 확인
+  const canSearchDepartment = user?.role === "ADMIN" || 
+                            user?.rank === "DIRECTOR" || 
+                            user?.rank === "GENERAL_MANAGER";
+
+  // 검색 안내 메시지
+  const getSearchHelperText = () => {
+    if (user?.role === "MANAGER") {
+      return "* 이름 또는 사번으로 검색 가능합니다. 타 부서 직원은 검색되지 ���습니다.";
+    }
+    return "";
   };
 
   return (
@@ -129,25 +187,23 @@ function UsersPage() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel>부서</InputLabel>
-                <Select
-                  value={filters.department}
-                  label="부서"
-                  onChange={(e) =>
-                    handleFilterChange("department", e.target.value)
-                  }
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  {departments.map((dept: any) => (
-                    <MenuItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+            {canSearchDepartment && (
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>부서</InputLabel>
+                  <Select
+                    value={filters.department}
+                    label="부서"
+                    onChange={(e) =>
+                      handleFilterChange("department", e.target.value)
+                    }
+                  >
+                    {user?.role === "ADMIN" && <MenuItem value="">전체</MenuItem>}
+                    {getDepartmentOptions()}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
                 <InputLabel>직급</InputLabel>

@@ -85,7 +85,7 @@ function TaskDetailPage() {
   const handleEditChange = (field: string, value: any) => {
     setEditedTask(prev => ({
       ...prev,
-      [field]: value
+      [field]: value || '' 
     }));
   };
 
@@ -458,7 +458,7 @@ function TaskDetailPage() {
                   <>
                     <InputLabel>난이도</InputLabel>
                     <Select
-                      value={editedTask.difficulty || task.difficulty}
+                      value={editedTask.difficulty || task.difficulty || ""}
                       label="난이도"
                       onChange={(e) => handleEditChange("difficulty", e.target.value)}
                     >
