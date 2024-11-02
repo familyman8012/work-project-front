@@ -124,18 +124,17 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
     <Box>
       <Box
         display="flex"
-        justifyContent="space-between"
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h6">작업 평가</Typography>
+        <Typography variant="h6"  sx={{ mr: "1rem" }}>작업 평가</Typography>
         <Button variant="contained" onClick={handleOpenDialog}>
           평가하기
         </Button>
       </Box>
 
       {/* 평가 목록 */}
-      <List>
+      {/* <List>
         {evaluations?.map((evaluation: TaskEvaluation) => (
           <Paper key={evaluation.id} sx={{ mb: 2 }}>
             <ListItem
@@ -193,7 +192,7 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
             아직 평가가 없습니다.
           </Typography>
         )}
-      </List>
+      </List> */}
 
       {/* 평가 입력 다이얼로그 */}
       <Dialog
