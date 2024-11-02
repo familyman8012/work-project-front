@@ -27,6 +27,19 @@ import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
 import { format } from "date-fns";
 import TaskCard from "@/components/tasks/TaskCard";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const RANK_LABELS: { [key: string]: string } = {
   STAFF: "사원",
@@ -92,6 +105,22 @@ function UserDetailPage() {
     },
     enabled: !!id,
   });
+
+  // 작업 통계 상세 정보 조회
+  const { data: statsDetail } = useQuery({
+    queryKey: ["userStatsDetail", id],
+    queryFn: async () => {
+      const response = await client.get(`/api/users/${id}/tasks_statistics_detail/`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+
+  // 색상 설정
+  const COLORS = {
+    priority: ["#ff6b6b", "#ffd93d", "#6c5ce7", "#a8e6cf"],
+    difficulty: ["#ff0000", "#ff6b6b", "#ffd93d", "#a8e6cf"],
+  };
 
   if (isUserLoading || isStatsLoading) {
     return (
@@ -290,6 +319,112 @@ function UserDetailPage() {
               지연된 작업이 없습니다.
             </Typography>
           )}
+        </Paper>
+
+        {/* 작업 통계 상세 정보 */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            작업 통계 상세
+          </Typography>
+          <Grid container spacing={3}>
+            {/* 우선순위 분포 */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" gutterBottom>
+                우선순위 분포
+              </Typography>
+              <Box sx={{ height: 300 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(statsDetail?.priority_distribution || {})
+                        .filter(([_, value]) => value > 0)
+                        .map(([key, value]) => ({
+                          name: key,
+                          value,
+                        }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {Object.entries(statsDetail?.priority_distribution || {})
+                        .filter(([_, value]) => value > 0)
+                        .map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS.priority[index % COLORS.priority.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </Grid>
+
+            {/* 난이도 분포 */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" gutterBottom>
+                난이도 분포
+              </Typography>
+              <Box sx={{ height: 300 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(statsDetail?.difficulty_distribution || {})
+                        .filter(([_, value]) => value > 0)
+                        .map(([key, value]) => ({
+                          name: key,
+                          value,
+                        }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {Object.entries(statsDetail?.difficulty_distribution || {})
+                        .filter(([_, value]) => value > 0)
+                        .map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS.difficulty[index % COLORS.difficulty.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            </Grid>
+
+            {/* 평균 작업 완료 시간 */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography color="text.secondary" gutterBottom>
+                    평균 작업 완료 시간
+                  </Typography>
+                  <Typography variant="h4">
+                    {statsDetail?.avg_completion_time.toFixed(1)}시간
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* 지연율 */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography color="text.secondary" gutterBottom>
+                    작업 지연율
+                  </Typography>
+                  <Typography variant="h4" color={statsDetail?.delay_rate > 30 ? "error" : "inherit"}>
+                    {statsDetail?.delay_rate.toFixed(1)}%
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         </Paper>
       </Box>
     </Layout>
