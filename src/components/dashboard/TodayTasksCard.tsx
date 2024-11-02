@@ -33,12 +33,12 @@ export default function TodayTasksCard() {
     }
 
     if (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER") {
-      const departmentId = user.department?.id;
+      const departmentId = user.department;
       if (departmentId) {
         params.append("department", departmentId.toString());
       }
     } else if (user.role === "MANAGER") {
-      const departmentId = user.department?.id;
+      const departmentId = user.department;
       if (departmentId) {
         params.append("department", departmentId.toString());
       }
@@ -56,7 +56,7 @@ export default function TodayTasksCard() {
       user?.id,
       user?.role,
       user?.rank,
-      user?.department?.id,
+      user?.department,
     ],
     queryFn: async () => {
       if (!user) return [];
@@ -77,7 +77,7 @@ export default function TodayTasksCard() {
       user?.id,
       user?.role,
       user?.rank,
-      user?.department?.id,
+      user?.department,
     ],
     queryFn: async () => {
       if (!user) return [];

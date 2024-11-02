@@ -66,10 +66,10 @@ function TasksPage() {
       console.log("Updating filters with user department:", authStore.user.department);
       setFilters(prev => ({
         ...prev,
-        department: authStore.user.department
+        department: Number(authStore?.user?.department) 
       }));
     }
-  }, [authStore.user?.department]);
+  }, []);
 
   const [page, setPage] = useState(1);
 
@@ -126,7 +126,7 @@ function TasksPage() {
   const handleClearFilters = () => {
     setFilters({
       ...initialFilters,
-      department: authStore.user?.department?.id || "",
+      department: authStore.user?.department || "",
     });
   };
 
@@ -159,7 +159,7 @@ function TasksPage() {
           onFilterChange={handleFilterChange}
           onSearchChange={handleSearchChange}
           onClearFilters={handleClearFilters}
-          currentUserDepartment={authStore.user?.department?.id}
+          currentUserDepartment={authStore.user?.department}
         />
 
         {isLoading ? (
