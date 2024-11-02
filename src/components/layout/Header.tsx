@@ -75,30 +75,12 @@ const Header = observer(() => {
     >
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          작업 관리 시스템
+          Govis Task Management
         </Typography>
 
         {authStore.isAuthenticated && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <NotificationDropdown />
-            {/* 사용자 프로필 */}
-            <Box
-              onClick={handleProfileClick}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-                "&:hover": { opacity: 0.8 },
-              }}
-            >
-              <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
-                {authStore.user?.first_name?.[0] ||
-                  authStore.user?.username?.[0]}
-              </Avatar>
-              <Typography variant="subtitle1">
-                {authStore.user?.first_name} {authStore.user?.last_name}
-              </Typography>
-            </Box>
           </Box>
         )}
 

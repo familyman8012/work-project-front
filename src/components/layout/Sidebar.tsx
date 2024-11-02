@@ -32,17 +32,13 @@ const menuItems = [
   { text: "내 작업", icon: <AssignmentTurnedIn />, path: "/my-tasks" },
   { text: "일정", icon: <Schedule />, path: "/schedule" },
   { text: "알림", icon: <Notifications />, path: "/notifications" },
- 
-
 ];
 
 const menuItems1 = [
-
-  { text: "작업 관리", icon: <Assignment />, path: "/tasks" },
+  { text: "회사 작업 리스트", icon: <Assignment />, path: "/tasks" },
   { text: "직원 관리", icon: <People />, path: "/users" },
   { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
   { text: "통계", icon: <Assessment />, path: "/statistics" },
-
 ];
 
 const Sidebar = observer(() => {

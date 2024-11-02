@@ -32,7 +32,7 @@ const UserInfoCard = observer(() => {
       case "DEPUTY_GENERAL_MANAGER":
         return "차장";
       case "GENERAL_MANAGER":
-        return "부장";
+        return "본부장";
       case "DIRECTOR":
         return "이사";
       default:
@@ -43,7 +43,7 @@ const UserInfoCard = observer(() => {
   if (!user) return null;
 
   const infoItems = [
-    { label: "이름", value: `${user.first_name} ${user.last_name}` },
+    { label: "이름", value: `${user.last_name}${user.first_name}` },
     { label: "사원 번호", value: user.employee_id },
     { label: "소속 부서", value: user.department_name },
     { label: "직급", value: getRankText(user.rank) },

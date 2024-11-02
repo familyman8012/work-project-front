@@ -1,141 +1,134 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   Box,
   Card,
   CardContent,
   Typography,
+  CircularProgress,
   Divider,
-  Chip,
 } from "@mui/material";
-import { Assignment, Warning } from "@mui/icons-material";
-import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/api/client";
+import TaskCard from "../tasks/TaskCard";
+import { authStore } from "@/stores/AuthStore";
 import { format } from "date-fns";
-import Link from "next/link";
 
-interface Task {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  due_date: string;
-  is_delayed: boolean;
-}
+export default function TodayTasksCard() {
+  const user = authStore.user;
 
-const TodayTasksCard = () => {
-  const today = format(new Date(), "yyyy-MM-dd");
+  // 사용자의 권한과 직급에 따른 필터 파라미터 설정
+  const getFilterParams = (isDelayed = false) => {
+    const params = new URLSearchParams();
+    const today = format(new Date(), "yyyy-MM-dd");
 
+    if (!isDelayed) {
+      // 수정: 시작일이 오늘보다 이전이고, 종료일이 오늘보다 이후인 작업을 찾음
+      params.append("start_date_before", today); // 시작일이 오늘 이전인 작업
+      params.append("due_date_after", today); // 종료일이 오늘 이후인 작업
+    }
+
+    if (!user) return params;
+
+    if (user.role === "ADMIN") {
+      return params;
+    }
+
+    if (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER") {
+      const departmentId = user.department?.id;
+      if (departmentId) {
+        params.append("department", departmentId.toString());
+      }
+    } else if (user.role === "MANAGER") {
+      const departmentId = user.department?.id;
+      if (departmentId) {
+        params.append("department", departmentId.toString());
+      }
+    } else {
+      params.append("assignee", user.id.toString());
+    }
+
+    return params;
+  };
+
+  // 작업 목록 조회
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ["todayTasks"],
+    queryKey: [
+      "todayTasks",
+      user?.id,
+      user?.role,
+      user?.rank,
+      user?.department?.id,
+    ],
     queryFn: async () => {
-      const response = await client.get("/api/tasks/", {
-        params: {
-          due_date_before: `${today}T23:59:59`,
-          status_not: "DONE",
-        },
-      });
-      return response.data.results as Task[];
+      if (!user) return [];
+      const params = getFilterParams(false);
+      params.append("ordering", "start_date");
+      console.log("Today tasks params:", params.toString());
+      const response = await client.get(`/api/tasks/?${params.toString()}`);
+      console.log("Today tasks response:", response.data);
+      return response.data.results;
     },
+    enabled: !!user,
   });
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "URGENT":
-        return "error";
-      case "HIGH":
-        return "warning";
-      case "MEDIUM":
-        return "info";
-      case "LOW":
-        return "success";
-      default:
-        return "default";
-    }
-  };
+  // 지연된 작업 목록 조회
+  const { data: delayedTasks } = useQuery({
+    queryKey: [
+      "delayedTasks",
+      user?.id,
+      user?.role,
+      user?.rank,
+      user?.department?.id,
+    ],
+    queryFn: async () => {
+      if (!user) return [];
+      const params = getFilterParams(true);
+      params.append("is_delayed", "true");
+      params.append("ordering", "start_date");
+      console.log("Delayed tasks params:", params.toString());
+      const response = await client.get(`/api/tasks/?${params.toString()}`);
+      console.log("Delayed tasks response:", response.data);
+      return response.data.results;
+    },
+    enabled: !!user,
+  });
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "TODO":
-        return "예정";
-      case "IN_PROGRESS":
-        return "진행중";
-      case "REVIEW":
-        return "검토중";
-      case "HOLD":
-        return "보류";
-      default:
-        return status;
-    }
-  };
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <Card elevation={2}>
+    <Card>
       <CardContent>
-        <Box display="flex" alignItems="center" mb={2}>
-          <Assignment sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
-          <Typography variant="h5" component="div">
-            오늘의 작업
-          </Typography>
-        </Box>
-        <Divider sx={{ mb: 2 }} />
-
-        {isLoading ? (
-          <Typography>로딩중...</Typography>
-        ) : !tasks?.length ? (
-          <Typography color="text.secondary">
-            오늘 처리할 작업이 없습니다.
-          </Typography>
+        <Typography variant="h6" gutterBottom>
+          관리 중인 오늘의 작업 ({tasks?.length || 0})
+        </Typography>
+        {tasks?.length > 0 ? (
+          tasks.map((task: any) => <TaskCard key={task.id} task={task} />)
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {tasks.map((task) => (
-              <Link
-                href={`/tasks/${task.id}`}
-                key={task.id}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    "&:hover": {
-                      backgroundColor: "action.hover",
-                    },
-                    cursor: "pointer",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="h6" component="div">
-                      {task.title}
-                    </Typography>
-                    {task.is_delayed && <Warning color="error" />}
-                  </Box>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Chip
-                      label={getStatusText(task.status)}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={task.priority}
-                      size="small"
-                      color={getPriorityColor(task.priority) as any}
-                    />
-                  </Box>
-                </Card>
-              </Link>
-            ))}
-          </Box>
+          <Typography color="text.secondary">
+            오늘 예정된 작업이 없습니다.
+          </Typography>
+        )}
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" gutterBottom color="error">
+          관리 중인 지연된 작업 ({delayedTasks?.length || 0})
+        </Typography>
+        {delayedTasks?.length > 0 ? (
+          delayedTasks.map((task: any) => (
+            <TaskCard key={task.id} task={task} />
+          ))
+        ) : (
+          <Typography color="text.secondary">
+            지연된 작업이 없습니다.
+          </Typography>
         )}
       </CardContent>
     </Card>
   );
-};
-
-export default TodayTasksCard;
+}

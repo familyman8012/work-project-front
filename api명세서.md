@@ -11,7 +11,7 @@ source venv/bin/activate
 윈도우 :
 venv\Scripts\activate
 
-pip install -r requirements.txt
+pip install -r requirements/base.txt
 
 python manage.py runserver
 

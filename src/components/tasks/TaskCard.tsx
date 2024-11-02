@@ -7,8 +7,16 @@ import {
   Box,
   LinearProgress,
 } from "@mui/material";
-import { AccessTime, PriorityHigh, Flag, Schedule } from "@mui/icons-material";
+import {
+  AccessTime,
+  PriorityHigh,
+  Flag,
+  Schedule,
+  DateRange,
+} from "@mui/icons-material";
 import { useRouter } from "next/router";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 
 interface TaskCardProps {
   task: Task;
@@ -37,7 +45,9 @@ const getPriorityColor = (priority: string) => {
 
 export default function TaskCard({ task }: TaskCardProps) {
   const router = useRouter();
-
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), "M월 d일", { locale: ko });
+  };
   const completionRate = task.actual_hours
     ? (task.actual_hours / task.estimated_hours) * 100
     : 0;
@@ -85,6 +95,13 @@ export default function TaskCard({ task }: TaskCardProps) {
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <DateRange sx={{ fontSize: 16, mr: 0.5 }} />
+            <Typography variant="body2">
+              시작일: {formatDate(task.start_date)} ~ 마감일:{" "}
+              {formatDate(task.due_date)}
+            </Typography>
+          </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Schedule sx={{ fontSize: 16, mr: 0.5 }} />
             <Typography variant="body2">

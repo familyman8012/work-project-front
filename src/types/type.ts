@@ -3,10 +3,21 @@ export interface User {
   username: string;
   email: string;
   employee_id: string;
-  role: "EMPLOYEE" | "MANAGER" | "ADMIN";
-  rank: "STAFF" | string;
-  department: number;
-  department_name: string;
+  role: "ADMIN" | "MANAGER" | "EMPLOYEE";
+  rank:
+    | "DIRECTOR"
+    | "GENERAL_MANAGER"
+    | "MANAGER"
+    | "STAFF"
+    | "SENIOR"
+    | "ASSISTANT_MANAGER"
+    | "DEPUTY_GENERAL_MANAGER";
+  department?: {
+    id: number;
+    name: string;
+    code: string;
+    parent_id?: number;
+  };
   first_name: string;
   last_name: string;
 }

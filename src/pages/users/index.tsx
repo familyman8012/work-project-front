@@ -44,7 +44,7 @@ const RANK_OPTIONS = [
   { value: "ASSISTANT_MANAGER", label: "대리" },
   { value: "MANAGER", label: "과장" },
   { value: "DEPUTY_GENERAL_MANAGER", label: "차장" },
-  { value: "GENERAL_MANAGER", label: "부장" },
+  { value: "GENERAL_MANAGER", label: "본부장" },
   { value: "DIRECTOR", label: "이사" },
 ];
 
