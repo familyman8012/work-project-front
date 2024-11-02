@@ -6,6 +6,7 @@ import {
   Chip,
   Box,
   LinearProgress,
+  Grid,
 } from "@mui/material";
 import {
   AccessTime,
@@ -20,7 +21,9 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 
 interface TaskCardProps {
-  task: Task;
+  task: any;
+  showDates?: boolean;
+  showScore?: boolean;
 }
 
 const getStatusColor = (status: TaskStatus) => {
@@ -44,7 +47,7 @@ const getPriorityColor = (priority: string) => {
   return colors[priority as keyof typeof colors] || "#9e9e9e";
 };
 
-export default function TaskCard({ task }: TaskCardProps) {
+export default function TaskCard({ task, showDates, showScore }: TaskCardProps) {
   const router = useRouter();
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "M월 d일", { locale: ko });
@@ -113,33 +116,44 @@ export default function TaskCard({ task }: TaskCardProps) {
           <Chip label={task.department_name} size="small" variant="outlined" />
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <DateRange sx={{ fontSize: 16, mr: 0.5 }} />
-            <Typography variant="body2">
-              시작일: {formatDate(task.start_date)} ~ 마감일:{" "}
-              {formatDate(task.due_date)}
+        <Grid container spacing={2} alignItems="center">
+          {showDates && (
+            <Grid item xs={12} sm={12}>
+              <Typography variant="body2" color="text.secondary">
+                {format(new Date(task.start_date), 'yyyy-MM-dd')} ~ 
+                {task.completed_at 
+                  ? format(new Date(task.completed_at), 'yyyy-MM-dd')
+                  : format(new Date(task.due_date), 'yyyy-MM-dd')}
+              </Typography>
+            </Grid>
+          )}
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" color="text.secondary">
+              예상 시간: {task.estimated_hours}시간    {task.actual_hours && (` / 실제 시간: ${task.actual_hours}시간`)}
+                {showScore && task.evaluation && (
+                  <Chip
+                    size="small"
+                    label={`${task.evaluation.performance_score}점`}
+                    color={task.evaluation.performance_score >= 4 ? "success" : "default"}
+                    sx={{ ml: 1 }}
+                  />
+                )}
             </Typography>
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Schedule sx={{ fontSize: 16, mr: 0.5 }} />
-            <Typography variant="body2">
-              예상: {task.estimated_hours}시간
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <AccessTime sx={{ fontSize: 16, mr: 0.5 }} />
-            <Typography variant="body2">
-              실제: {task.actual_hours || 0}시간
-            </Typography>
-          </Box>
-        </Box>
+          </Grid>
+          {task.actual_hours && (
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
+              
+              </Typography>
+            </Grid>
+          )}
+        </Grid>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="body2" color="text.secondary">
             진행률:
           </Typography>
-          <Box sx={{ width: "100%" }}>
+          <Box sx={{ width: "80%" }}>
             <LinearProgress
               variant="determinate"
               value={Math.min(completionRate, 100)}

@@ -21,6 +21,7 @@ import {
   Assignment,
   Schedule,
   Warning,
+  CheckCircle,
 } from "@mui/icons-material";
 import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
@@ -55,7 +56,7 @@ function UserDetailPage() {
   const router = useRouter();
   const { id } = router.query;
 
-  // 사용자 기본 정보 조회
+  // 사용��� 기본 정보 조회
   const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ["user", id],
     queryFn: async () => {
@@ -112,6 +113,21 @@ function UserDetailPage() {
     queryFn: async () => {
       const response = await client.get(`/api/users/${id}/tasks_statistics_detail/`);
       return response.data;
+    },
+    enabled: !!id,
+  });
+
+  // 완료된 작업 목록 조회 쿼리 추가
+  const { data: completedTasks } = useQuery({
+    queryKey: ["userCompletedTasks", id],
+    queryFn: async () => {
+      const response = await client.get(`/api/tasks/`, {
+        params: {
+          assignee: id,
+          status: "DONE",
+        },
+      });
+      return response.data.results;
     },
     enabled: !!id,
   });
@@ -274,13 +290,30 @@ function UserDetailPage() {
                   </Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography>중간</Typography>
-                    <Typography>
-                      {statistics.tasks_by_priority.MEDIUM}
-                    </Typography>
+                    <Typography>{statistics.tasks_by_priority.MEDIUM}</Typography>
                   </Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography>낮음</Typography>
                     <Typography>{statistics.tasks_by_priority.LOW}</Typography>
+                  </Box>
+                  
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <Box display="flex" justifyContent="space-between" mb={1}>
+                    <Typography color="text.secondary">평균 점수</Typography>
+                    <Typography 
+                      color={statsDetail?.avg_score >= 4 ? "success.main" : "text.primary"}
+                      fontWeight="bold"
+                    >
+                      {statsDetail?.avg_score?.toFixed(1) || '-'} / 5.0
+                    </Typography>
+                  </Box>
+                  
+                  <Box display="flex" justifyContent="space-between" mb={1}>
+                    <Typography color="text.secondary">평균 소요시간</Typography>
+                    <Typography>
+                      {statsDetail?.avg_completion_time?.toFixed(1) || '-'}시간
+                    </Typography>
                   </Box>
                 </Box>
               )}
@@ -288,41 +321,8 @@ function UserDetailPage() {
           </Grid>
         </Grid>
 
-        {/* 현재 진행중인 작업 */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            진행중인 작업
-          </Typography>
-          {currentTasks?.length > 0 ? (
-            currentTasks.map((task: any) => (
-              <TaskCard key={task.id} task={task} />
-            ))
-          ) : (
-            <Typography color="text.secondary">
-              진행중인 작업이 없습니다.
-            </Typography>
-          )}
-        </Paper>
-
-        {/* 지연된 작업 섹션 추가 */}
-        <Paper sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <Warning color="error" />
-            <Typography variant="h6">지연된 작업</Typography>
-          </Box>
-          {delayedTasks?.length > 0 ? (
-            delayedTasks.map((task: any) => (
-              <TaskCard key={task.id} task={task} />
-            ))
-          ) : (
-            <Typography color="text.secondary">
-              지연된 작업이 없습니다.
-            </Typography>
-          )}
-        </Paper>
-
-        {/* 작업 통계 상세 정보 */}
-        <Paper sx={{ p: 3, mb: 3 }}>
+         {/* 작업 통계 상세 정보 */}
+         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             작업 통계 상세
           </Typography>
@@ -397,8 +397,15 @@ function UserDetailPage() {
               </Box>
             </Grid>
 
-            {/* 평균 작업 완료 시간 */}
-            <Grid item xs={12} md={6}>
+           
+          </Grid>
+        </Paper>
+
+    
+        <Grid container spacing={3}>
+         {/* 평균 작업 완료 시간 */}
+         <Grid item xs={12} md={6}>
+          
               <Card>
                 <CardContent>
                   <Typography color="text.secondary" gutterBottom>
@@ -424,8 +431,73 @@ function UserDetailPage() {
                 </CardContent>
               </Card>
             </Grid>
-          </Grid>
+            </Grid>
+       
+
+        {/* 현재 진행중인 작업 */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            진행중인 작업
+          </Typography>
+          {currentTasks?.length > 0 ? (
+            currentTasks.map((task: any) => (
+              <TaskCard 
+                key={task.id} 
+                task={task}
+                showDates  // 날짜 표시 prop 추가
+              />
+            ))
+          ) : (
+            <Typography color="text.secondary">
+              진행중인 작업이 없습니다.
+            </Typography>
+          )}
         </Paper>
+
+        {/* 지연된 작업 섹션 */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <Warning color="error" />
+            <Typography variant="h6">지연된 작업</Typography>
+          </Box>
+          {delayedTasks?.length > 0 ? (
+            delayedTasks.map((task: any) => (
+              <TaskCard 
+                key={task.id} 
+                task={task}
+                showDates  // 날짜 표시 prop 추가
+              />
+            ))
+          ) : (
+            <Typography color="text.secondary">
+              지연된 작업이 없습니다.
+            </Typography>
+          )}
+        </Paper>
+
+        {/* 완료된 작업 섹션 추가 */}
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <CheckCircle color="success" />
+            <Typography variant="h6">완료된 작업</Typography>
+          </Box>
+          {completedTasks?.length > 0 ? (
+            completedTasks.map((task: any) => (
+              <TaskCard 
+                key={task.id} 
+                task={task}
+                showDates  // 날짜 표시 prop 추가
+                showScore  // 작업 점수 표시 prop 추가
+              />
+            ))
+          ) : (
+            <Typography color="text.secondary">
+              완료된 작업이 없습니다.
+            </Typography>
+          )}
+        </Paper>
+
+       
       </Box>
     </Layout>
   );
