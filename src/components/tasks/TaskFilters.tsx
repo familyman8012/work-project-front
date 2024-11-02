@@ -146,6 +146,12 @@ const TaskFilters = ({
     return options;
   };
 
+  // 필터 초기화 처리 수정
+  const handleClearFilters = () => {
+    setSearchInput(""); // 검색어 입력창 초기화 추가
+    onClearFilters();
+  };
+
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
@@ -236,7 +242,7 @@ const TaskFilters = ({
           />
         </LocalizationProvider>
         {/* 필터 초기화 버튼 */}
-        <IconButton onClick={onClearFilters} size="small">
+        <IconButton onClick={handleClearFilters} size="small">
           <Clear />
         </IconButton>
       </Box>

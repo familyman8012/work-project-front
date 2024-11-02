@@ -296,6 +296,7 @@ function TaskDetailPage() {
               </FormControl>
             </Grid>
           </Grid>
+
         </Paper>
       </Box>
       <Grid container spacing={3} sx={{ mt: 2 }}>

@@ -41,15 +41,32 @@ export default function TaskList({ tasks, page, onPageChange }: TaskListProps) {
       </Box>
 
       {totalPages > 1 && (
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            justifyContent: "center",
+            mt: 3,
+            mb: 2
+          }}
+        >
           <Pagination
             count={totalPages}
             page={page}
             onChange={(_, value) => onPageChange(value)}
             color="primary"
+            showFirstButton
+            showLastButton
+            size="large"
           />
         </Box>
       )}
+      
+      <Box sx={{ textAlign: "center", mt: 1 }}>
+        <Typography variant="body2" color="text.secondary">
+          전체 {tasks.count}개 중 {(page - 1) * 10 + 1}-
+          {Math.min(page * 10, tasks.count)}개 표시
+        </Typography>
+      </Box>
     </Box>
   );
 }
