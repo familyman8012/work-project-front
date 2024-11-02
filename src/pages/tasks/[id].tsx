@@ -257,7 +257,7 @@ function TaskDetailPage() {
   return (
     <Layout>
       <Box p={3}>
-        <Paper sx={{ p: 3 }}>
+        <Paper sx={{ p: 3, border:"1px solid #e0e0e0"}}>
           <Box
             display="flex"
             justifyContent="space-between"
@@ -328,32 +328,14 @@ function TaskDetailPage() {
           )}
 
           <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 담당자
               </Typography>
               <Typography>{task.assignee_full_name}</Typography>
             </Grid>
 
-            <Grid item xs={12} md={3}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                시작일
-              </Typography>
-              <Typography>
-                {format(new Date(task.start_date), "yyyy-MM-dd")}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                마감일
-              </Typography>
-              <Typography>
-                {format(new Date(task.due_date), "yyyy-MM-dd")}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={2}>
               
               {isEditing && canEditField("status") ? (
                 <FormControl fullWidth>
@@ -383,6 +365,49 @@ function TaskDetailPage() {
            
           </Grid>
 
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                시작일 ~ 마감일 
+              </Typography>
+              <Typography>
+                {format(new Date(task.start_date), "yyyy-MM-dd")} ~ {format(new Date(task.due_date), "yyyy-MM-dd")}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={2}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                예상시간
+              </Typography>
+              <Typography>{task.estimated_hours}시간</Typography>
+            </Grid>
+
+            <Grid item xs={12} md={2}>
+              {isEditing && canEditField("actual_hours") ? (
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="실제 소요 시간"
+                  value={editedTask.actual_hours ?? task.actual_hours ?? ""}
+                  onChange={(e) => handleEditChange("actual_hours", Number(e.target.value))}
+                  InputProps={{ inputProps: { min: 0, step: 0.5 } }}
+                />
+              ) : (
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    실제 소요 시간
+                  </Typography>
+                  <Typography>
+                    {task.actual_hours || 0} 시간
+                  </Typography>
+                </Box>
+              )}
+            </Grid>
+
+           
+          
+
+
+
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 설명
@@ -393,7 +418,7 @@ function TaskDetailPage() {
      
 
 
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
              
                 {isEditing && canEditField("priority") ? (
                    <FormControl fullWidth>
@@ -425,27 +450,7 @@ function TaskDetailPage() {
        
             
 
-            <Grid item xs={12} md={3}>
-              {isEditing && canEditField("actual_hours") ? (
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="실제 소요 시간"
-                  value={editedTask.actual_hours ?? task.actual_hours ?? ""}
-                  onChange={(e) => handleEditChange("actual_hours", Number(e.target.value))}
-                  InputProps={{ inputProps: { min: 0, step: 0.5 } }}
-                />
-              ) : (
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    실제 소요 시간
-                  </Typography>
-                  <Typography>
-                    {task.actual_hours || 0} 시간
-                  </Typography>
-                </Box>
-              )}
-            </Grid>
+            
 
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
@@ -497,12 +502,12 @@ function TaskDetailPage() {
       </Box>
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: 3, border:"1px solid #e0e0e0"}}>
             <TaskTimeLog taskId={Number(id)} />
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: 3, border:"1px solid #e0e0e0" }}>
             <TaskHistory taskId={Number(id)} />
           </Paper>
         </Grid>
@@ -513,7 +518,7 @@ function TaskDetailPage() {
       </Box>
 
       {/* 작업 평가 섹션 추가 */}
-      <Paper sx={{ p: 3, mt: 3 }}>
+      <Paper sx={{ p: 3, mt: 3, border:"1px solid #e0e0e0" }}>
         <TaskEvaluation taskId={Number(id)} />
       </Paper>
 
