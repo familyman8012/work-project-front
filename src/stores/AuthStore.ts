@@ -16,8 +16,10 @@ class AuthStore {
     if (accessToken) {
       try {
         const response = await client.get("/api/users/me/");
+        console.log("User info response:", response.data);
         this.setUser(response.data);
       } catch (error) {
+        console.error("Error fetching user info:", error);
         this.logout();
       }
     }

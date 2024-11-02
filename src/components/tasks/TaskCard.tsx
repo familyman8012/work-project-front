@@ -13,6 +13,7 @@ import {
   Flag,
   Schedule,
   DateRange,
+  Person,
 } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { format } from "date-fns";
@@ -67,9 +68,27 @@ export default function TaskCard({ task }: TaskCardProps) {
     >
       <CardContent>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography variant="h6" component="div">
-            {task.title}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="h6" component="div">
+              {task.title}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ 
+                display: "flex", 
+                alignItems: "center",
+                gap: 0.5,
+                ml: 2,
+                backgroundColor: "action.hover",
+                padding: "4px 8px",
+                borderRadius: "4px"
+              }}
+            >
+              <Person fontSize="small" />
+              {task.assignee_full_name}
+            </Typography>
+          </Box>
           <Chip
             icon={<PriorityHigh />}
             label={task.priority}

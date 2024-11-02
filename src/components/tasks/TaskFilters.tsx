@@ -15,6 +15,14 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import ko from "date-fns/locale/ko";
 import { TaskStatus, TaskPriority } from "@/types/type";
+import { useState } from "react";
+
+interface Department {
+  id: number;
+  name: string;
+  parent: number | null;
+  parent_name?: string;
+}
 
 interface TaskFiltersProps {
   filters: {
@@ -25,30 +33,129 @@ interface TaskFiltersProps {
     endDate: Date | null;
     search: string;
   };
-  departments?: Array<{ id: number; name: string }>;
+  departments?: Department[];
   onFilterChange: (name: string, value: any) => void;
   onSearchChange: (value: string) => void;
   onClearFilters: () => void;
   hideFilters?: string[];
+  currentUserDepartment?: number;
 }
 
 const TaskFilters = ({
   filters,
-  departments,
+  departments = [],
   onFilterChange,
   onSearchChange,
   onClearFilters,
   hideFilters = [],
+  currentUserDepartment,
 }: TaskFiltersProps) => {
+  // 검색어 임시 저장을 위한 state 추가
+  const [searchInput, setSearchInput] = useState(filters.search);
+
+  // 엔터키 처리
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      // 검색어가 있을 경우 부서 필터를 초기화
+      if (searchInput.trim()) {
+        onFilterChange("department", "");  // 부서 필터를 모든 부서로 설정
+      }
+      onSearchChange(searchInput);
+    }
+  };
+
+  // 검색어 입력 처리
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  // 부서 선택 처리
+  const handleDepartmentChange = (e: any) => {
+    // 부서가 선택되면 검색어 초기화
+    if (e.target.value !== "") {
+      setSearchInput("");  // 검색어 입력창 초기화
+      onSearchChange("");  // 검색 필터 초기화
+    }
+    onFilterChange("department", e.target.value);
+  };
+
+  // 부서 계층 구조 생성
+  const organizeHierarchy = (depts: Department[]) => {
+    // 본부들 (parent가 null인 부서들)
+    const headquarters = depts.filter(dept => dept.parent === null);
+    
+    // 각 본부의 하위 팀들 찾기
+    const getTeams = (hqId: number) => {
+      return depts.filter(dept => dept.parent === hqId);
+    };
+
+    return headquarters.map(hq => ({
+      ...hq,
+      teams: getTeams(hq.id)
+    }));
+  };
+
+  const hierarchicalDepts = organizeHierarchy(departments);
+
+  // 부서 옵션 렌더링
+  const renderDepartmentOptions = () => {
+    const options: JSX.Element[] = [
+      <MenuItem key="all" value="">모든 부서</MenuItem>
+    ];
+
+    hierarchicalDepts.forEach(hq => {
+      // 본부 레벨 (구분선으로 강조)
+      options.push(
+        <MenuItem 
+          key={hq.id} 
+          value={hq.id}
+          sx={{
+            fontWeight: 'bold',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: hq.id === currentUserDepartment ? 'action.selected' : 'inherit',
+            '&:hover': {
+              backgroundColor: hq.id === currentUserDepartment ? 'action.selected' : 'action.hover'
+            }
+          }}
+        >
+          📂 {hq.name}
+        </MenuItem>
+      );
+
+      // 해당 본부의 하위 팀들
+      hq.teams?.forEach(team => {
+        options.push(
+          <MenuItem 
+            key={team.id} 
+            value={team.id}
+            sx={{
+              pl: 4,
+              backgroundColor: team.id === currentUserDepartment ? 'action.selected' : 'inherit',
+              '&:hover': {
+                backgroundColor: team.id === currentUserDepartment ? 'action.selected' : 'action.hover'
+              }
+            }}
+          >
+            └ {team.name}
+          </MenuItem>
+        );
+      });
+    });
+
+    return options;
+  };
+
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        {/* 검색창 */}
+        {/* 검색창 수정 */}
         <TextField
           size="small"
-          placeholder="작업 검색..."
-          value={filters.search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="작업명 또는 담당자 이름으로 검색 후 엔터..."
+          value={searchInput}
+          onChange={handleSearchInputChange}
+          onKeyPress={handleKeyPress}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -56,7 +163,7 @@ const TaskFilters = ({
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 300 }}
         />
         {/* 상태 필터 */}
         {!hideFilters.includes("status") && (
@@ -95,19 +202,21 @@ const TaskFilters = ({
         )}
         {/* 부서 필터 */}
         {!hideFilters.includes("department") && departments && (
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+          <FormControl size="small" sx={{ minWidth: 250 }}>
             <InputLabel>부서</InputLabel>
             <Select
               value={filters.department}
               label="부서"
-              onChange={(e) => onFilterChange("department", e.target.value)}
+              onChange={handleDepartmentChange}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    maxHeight: 400
+                  }
+                }
+              }}
             >
-              <MenuItem value="">전체</MenuItem>
-              {departments.map((dept) => (
-                <MenuItem key={dept.id} value={dept.id}>
-                  {dept.name}
-                </MenuItem>
-              ))}
+              {renderDepartmentOptions()}
             </Select>
           </FormControl>
         )}

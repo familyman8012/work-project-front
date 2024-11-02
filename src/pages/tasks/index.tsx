@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Box, Typography, CircularProgress, Button } from "@mui/material";
 import { withAuth } from "@/components/auth/withAuth";
@@ -12,6 +12,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import TaskList from "@/components/tasks/TaskList";
 import { TaskStatus } from "@/types/type";
 import { TaskPriority } from "@/types/type";
+import { authStore } from "@/stores/AuthStore";
 
 interface Filters {
   status: TaskStatus | "";
@@ -20,6 +21,13 @@ interface Filters {
   startDate: Date | null;
   endDate: Date | null;
   search: string;
+}
+
+interface Department {
+  id: number;
+  name: string;
+  parent: number | null;
+  parent_name?: string;
 }
 
 const initialFilters: Filters = {
@@ -33,19 +41,38 @@ const initialFilters: Filters = {
 
 function TasksPage() {
   const router = useRouter();
-  const [filters, setFilters] = useState<Filters>(initialFilters);
-  const [page, setPage] = useState(1);
 
-  // 부서 목록 조회
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: async () => {
       const response = await client.get("/api/departments/");
+      console.log("Departments response:", response.data);
       return response.data;
     },
   });
 
-  // 작업 목록 조회
+  const [filters, setFilters] = useState<Filters>(() => {
+    console.log("Setting initial filters");
+    console.log("Current user department:", authStore.user?.department);
+    
+    return {
+      ...initialFilters,
+      department: authStore.user?.department || "",
+    };
+  });
+
+  useEffect(() => {
+    if (authStore.user?.department) {
+      console.log("Updating filters with user department:", authStore.user.department);
+      setFilters(prev => ({
+        ...prev,
+        department: authStore.user.department
+      }));
+    }
+  }, [authStore.user?.department]);
+
+  const [page, setPage] = useState(1);
+
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["tasks", filters, page],
     queryFn: async () => {
@@ -53,29 +80,33 @@ function TasksPage() {
 
       if (filters.status) params.append("status", filters.status);
       if (filters.priority) params.append("priority", filters.priority);
-      if (filters.department)
+      if (filters.department !== "") {
         params.append("department", String(filters.department));
-      if (filters.startDate)
-        params.append(
-          "start_date_after",
-          format(filters.startDate, "yyyy-MM-dd")
-        );
-      if (filters.endDate)
-        params.append("due_date_before", format(filters.endDate, "yyyy-MM-dd"));
+      }
+      if (filters.startDate) {
+        params.append("start_date", format(filters.startDate, "yyyy-MM-dd"));
+      }
+      if (filters.endDate) {
+        params.append("end_date", format(filters.endDate, "yyyy-MM-dd"));
+      }
       if (filters.search) params.append("search", filters.search);
 
       params.append("page", String(page));
       params.append("page_size", "10");
+      params.append("ordering", "start_date");
 
+      const url = `/api/tasks/?${params.toString()}`;
+      console.log("Fetching tasks with URL:", url);
+      
       try {
-        const response = await client.get(`/api/tasks/?${params.toString()}`);
-        console.log("API Response:", response.data); // 디버깅용 로그
+        const response = await client.get(url);
         return response.data;
       } catch (error) {
-        console.error("API Error:", error); // 디버깅용 로그
+        console.error("API Error:", error);
         throw error;
       }
     },
+    enabled: true,
   });
 
   const handleFilterChange = (name: string, value: any) => {
@@ -93,7 +124,10 @@ function TasksPage() {
   };
 
   const handleClearFilters = () => {
-    setFilters(initialFilters);
+    setFilters({
+      ...initialFilters,
+      department: authStore.user?.department?.id || "",
+    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -109,7 +143,7 @@ function TasksPage() {
           alignItems="center"
           mb={3}
         >
-          <Typography variant="h5">작업 목록</Typography>
+          <Typography variant="h5">회사 작업 리스트</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -125,6 +159,7 @@ function TasksPage() {
           onFilterChange={handleFilterChange}
           onSearchChange={handleSearchChange}
           onClearFilters={handleClearFilters}
+          currentUserDepartment={authStore.user?.department?.id}
         />
 
         {isLoading ? (

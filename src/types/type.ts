@@ -12,12 +12,8 @@ export interface User {
     | "SENIOR"
     | "ASSISTANT_MANAGER"
     | "DEPUTY_GENERAL_MANAGER";
-  department?: {
-    id: number;
-    name: string;
-    code: string;
-    parent_id?: number;
-  };
+  department: number;
+  department_name: string;
   first_name: string;
   last_name: string;
 }
@@ -30,6 +26,7 @@ export interface Task {
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   assignee: number;
   assignee_name: string;
+  assignee_full_name: string;
   reporter: number;
   reporter_name: string;
   department: number;
