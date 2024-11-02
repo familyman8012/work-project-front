@@ -31,6 +31,7 @@ export interface Task {
   reporter_name: string;
   department: number;
   department_name: string;
+  department_parent_id: number | null;
   start_date: string;
   due_date: string;
   completed_at?: string;
