@@ -134,7 +134,7 @@ function PersonalReportPage() {
         if (error.response?.status === 403) {
           toast.error("해당 직원의 보고서에 대한 접근 권한이 없습니다.");
         } else {
-          toast.error("보고서를 러오는 중 오류가 생습니다.");
+          toast.error("보고서를 러오는 중 오류가 생���니다.");
         }
         throw error;
       }
@@ -332,7 +332,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
            - 업무 자동화 방안 연구
 
         3) 향후 준비사항
-           - 향후 예상 작업에 대한 사전 조사 및 준비
+           - 향후 예상 작업에 대��� 사전 조사 및 준비
            - 필요 역량 및 리소스 파악
            - 일정 및 우선순위 관리 체계 점검
       `;
@@ -444,8 +444,8 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
         [지연 작업 집중 관리 방안]
         ${stats.delayed_tasks}건(${delayRate.toFixed(1)}%)의 지연 작업에 대한 체계적인 관리가 필요합다:
         
-        1. 지연 원인 분석
-           - 작업별 지연 원인 상세 분석
+        1. 지연 원인 분
+           - 업별 지연 원인 상세 분석
            - 공통 지연 요인 도출
         
         2. 일정 관리 체계화
@@ -533,7 +533,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
       
       3. 조직 기여도 확대
          - 부서 내 지식 활동 주도
-         - 업무 프로세스 개선 제�� 활성화
+         - 업무 프로세스 개선 제 활성화
     `;
   };
 
@@ -952,35 +952,60 @@ function DistributionStats({
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
   const getDistributionAnalysis = () => {
-    const priorityAnalysis = getPriorityAnalysis();
-    const difficultyAnalysis = getDifficultyAnalysis();
-    const statusAnalysis = getStatusAnalysis();
+    const highPriorityTasks = stats.priority_distribution
+      .filter(item => ["HIGH", "URGENT"].includes(item.field))
+      .reduce((sum, item) => sum + item.percentage, 0);
+
+    const hardTasks = stats.difficulty_distribution
+      .filter(item => ["HARD", "VERY_HARD"].includes(item.field))
+      .reduce((sum, item) => sum + item.percentage, 0);
+
+    const inProgressTasks = stats.status_distribution
+      .find(item => item.field === "IN_PROGRESS")?.percentage || 0;
 
     return (
       <>
         <Typography variant="h6" gutterBottom>
           작업 분포 종합 분석
         </Typography>
-        
+
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
           우선순위 분포 분석
         </Typography>
         <Typography variant="body1" paragraph>
-          {priorityAnalysis}
+          {`전체 작업 중 높은 우선순위(긴급/높음) 작업이 ${highPriorityTasks.toFixed(1)}%를 차지하고 있어, ${
+            highPriorityTasks > 50
+              ? "업무 부하가 높은 상황입니다. 우선순위 재조정 및 자원 배분 검토가 필요합니다."
+              : highPriorityTasks > 30
+              ? "적정 수준의 업무 강도를 유지하고 있습니다."
+              : "비교적 여유있는 업무 상황을 보이고 있습니다."
+          }`}
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom>
           난이도 분포 분석
         </Typography>
         <Typography variant="body1" paragraph>
-          {difficultyAnalysis}
+          {`높은 난이도(어려움/매우 어려움) 작업이 ${hardTasks.toFixed(1)}%를 차지하고 있어, ${
+            hardTasks > 40
+              ? "기술적 도전이 많 상황입니다. 추가 지원이나 교육이 필요할 수 있습니다."
+              : hardTasks > 20
+              ? "적절한 수준의 기술적 도전을 유지하고 있습니다."
+              : "비교적 안정적인 난이도로 업무가 구성되어 있습니다."
+          }`}
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom>
           상태 분포 분석
         </Typography>
         <Typography variant="body1" paragraph>
-          {statusAnalysis}
+          {`현재 진행 중인 작업이 ${inProgressTasks.toFixed(1)}%를 차지하고 있어, ${
+            inProgressTasks > 60
+              ? "동시 진행 작업이 많아 업무 집중도가 저하될 수 있습니다."
+              : inProgressTasks > 30
+              ? "적정한 수준의 작업을 진행하고 있습니다."
+              : "추가 작업 수용이 가능한 상태입니다."
+          }`}
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
@@ -995,51 +1020,6 @@ function DistributionStats({
         </Box>
       </>
     );
-  };
-
-  const getPriorityAnalysis = () => {
-    const total = stats.priority_distribution.reduce((sum, item) => sum + item.count, 0);
-    const highPriorityItems = stats.priority_distribution
-      .filter(item => ["HIGH", "URGENT"].includes(item.priority));
-    const highPriorityRate = (highPriorityItems.reduce((sum, item) => sum + item.count, 0) / total) * 100;
-
-    return `전체 작업 중 높은 우선순위(긴급/높음) 작업이 ${highPriorityRate.toFixed(1)}%를 차지하고 있어, ${
-      highPriorityRate > 50
-        ? "업무 부하가 높은 상황입니다. 우선순위 재조정 및 자원 배분 검토가 필요합니다."
-        : highPriorityRate > 30
-        ? "적정 수준의 업무 강도를 유지하고 있습니다."
-        : "비교적 여유있는 업무 상황을 보이고 있습니다."
-    }`;
-  };
-
-  const getDifficultyAnalysis = () => {
-    const total = stats.difficulty_distribution.reduce((sum, item) => sum + item.count, 0);
-    const hardTaskItems = stats.difficulty_distribution
-      .filter(item => ["HARD", "VERY_HARD"].includes(item.difficulty));
-    const hardTaskRate = (hardTaskItems.reduce((sum, item) => sum + item.count, 0) / total) * 100;
-
-    return `높은 난이도(어려움/매우 어려움) 작업이 ${hardTaskRate.toFixed(1)}%를 차지하고 있어, ${
-      hardTaskRate > 40
-        ? "기술적 도전이 많은 상황입니다. 추가 지원이나 교육이 필요할 수 있습니다."
-        : hardTaskRate > 20
-        ? "적절한 수준의 기술적 도전을 유지하고 있습니다."
-        : "비교적 안정적인 난이도로 업무가 구성되어 있습니다."
-    }`;
-  };
-
-  const getStatusAnalysis = () => {
-    const total = stats.status_distribution.reduce((sum, item) => sum + item.count, 0);
-    const inProgressItems = stats.status_distribution
-      .filter(item => item.status === "IN_PROGRESS");
-    const inProgressRate = (inProgressItems.reduce((sum, item) => sum + item.count, 0) / total) * 100;
-
-    return `현재 진행 중인 작업이 ${inProgressRate.toFixed(1)}%를 차지하고 있어, ${
-      inProgressRate > 60
-        ? "동시 진행 작업이 많아 업무 집중도가 저하될 수 있습니다."
-        : inProgressRate > 30
-        ? "적정한 수준의 작업을 진행하고 있습니다."
-        : "추가 작업 수용이 가능한 상태입니다."
-    }`;
   };
 
   const getImprovement = () => {
@@ -1110,7 +1090,7 @@ function DistributionStats({
       "TODO": "예정",
       "IN_PROGRESS": "진행중",
       "REVIEW": "검토중",
-      "DONE": "료",
+      "DONE": "완료",
       "HOLD": "보류"
     };
     return labels[status] || status;
@@ -1142,8 +1122,15 @@ function DistributionStats({
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [`${value}건`, name]} />
-                <Legend />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    `${value}건`, 
+                    getPriorityLabel(String(name))
+                  ]} 
+                />
+                <Legend 
+                  formatter={(value) => getPriorityLabel(String(value))} 
+                />
               </PieChart>
             </ResponsiveContainer>
           </Box>
