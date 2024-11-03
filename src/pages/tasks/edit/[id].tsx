@@ -196,6 +196,58 @@ function EditTaskPage() {
     );
   }
 
+  // 부서 계층 구조 생성 함수 추가
+const organizeHierarchy = (depts: any[]) => {
+  const headquarters = depts.filter(dept => dept.parent === null);
+  
+  const getTeams = (hqId: number) => {
+    return depts.filter(dept => dept.parent === hqId);
+  };
+
+  return headquarters.map(hq => ({
+    ...hq,
+    teams: getTeams(hq.id)
+  }));
+};
+
+  // 부서 옵션 렌더링 함수 추가
+const renderDepartmentOptions = (departments: any[]) => {
+  const hierarchicalDepts = organizeHierarchy(departments);
+  const options: JSX.Element[] = [];
+
+  hierarchicalDepts.forEach(hq => {
+    // 본부 레벨
+    options.push(
+      <MenuItem 
+        key={hq.id} 
+        value={hq.id}
+        sx={{
+          fontWeight: 'bold',
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        📂 {hq.name}
+      </MenuItem>
+    );
+
+    // 해당 본부의 하위 팀들
+    hq.teams?.forEach((team: any) => {
+      options.push(
+        <MenuItem 
+          key={team.id} 
+          value={team.id}
+          sx={{ pl: 4 }}
+        >
+          └ {team.name}
+        </MenuItem>
+      );
+    });
+  });
+
+  return options;
+};
+
   return (
     <Layout>
       <Box sx={{ p: 3 }}>

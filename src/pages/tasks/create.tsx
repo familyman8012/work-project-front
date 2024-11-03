@@ -89,7 +89,7 @@ const renderDepartmentOptions = (departments: any[]) => {
     );
 
     // 해당 본부의 하위 팀들
-    hq.teams?.forEach(team => {
+    hq.teams?.forEach((team: any) => {
       options.push(
         <MenuItem 
           key={team.id} 
