@@ -134,7 +134,7 @@ function PersonalReportPage() {
         if (error.response?.status === 403) {
           toast.error("해당 직원의 보고서에 대한 접근 권한이 없습니다.");
         } else {
-          toast.error("보고서를 러오는 중 오류가 생���니다.");
+          toast.error("보고서를 는 중 오류가 생다.");
         }
         throw error;
       }
@@ -291,12 +291,12 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
                 • 자격증 취득 준비
 
               2. 업무 프로세스 개선
-                • 기존 업무 수 방식 분석
+                • 기 업무 수 방식 분석
                 • 업무 매뉴얼 및 가이드라인 정비
                 • 업무 자동화 방안 연구
 
               3. 향후 준비
-                • 예상 작업에 대한 사전 조사
+                • 예상 작업에 한 사전 조사
                 • 필요 역량 및 리소스 파악
                 • 일정 관리 체계 점검`}
             </Typography>
@@ -332,7 +332,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
            - 업무 자동화 방안 연구
 
         3) 향후 준비사항
-           - 향후 예상 작업에 대��� 사전 조사 및 준비
+           - 향후 예상 작업에 대 사전 조사 및 준비
            - 필요 역량 및 리소스 파악
            - 일정 및 우선순위 관리 체계 점검
       `;
@@ -425,7 +425,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
     if (delayRate >= 30) {
       suggestions.push(`
         [심각 지연 작업 개선 최우선 과제]
-        현재 ${stats.delayed_tasks}건(${delayRate.toFixed(1)}%)의 높은 지연율이 발생하고 있어 즉각적인 조치가 필요합니다:
+        현재 ${stats.delayed_tasks}건(${delayRate.toFixed(1)}%)의 높 지연율이 발생하고 있어 즉각적인 조치가 필요합니다:
         
         1. 긴급 태스크포스 구성
            - 지연 작업 전담 대응팀 구성
@@ -459,7 +459,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
         
         1. 예방적 조치
            - 리스크 조기 식별 체계 구축
-           - 버퍼 시간 적절한 배분
+           - 버퍼 시간 적한 분
       `);
     }
 
@@ -605,6 +605,28 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
 
 // 시간 관리 컴포넌트
 function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
+  // 초 단위의 시간을 "00시간 00분" 형식으로 변환하는 함수
+  const formatTimeToHoursMinutes = (seconds: number | string) => {
+    const totalSeconds = typeof seconds === 'string' ? parseFloat(seconds) : seconds;
+    if (!totalSeconds || isNaN(totalSeconds)) return "0시간 0분";
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    return `${hours}시간 ${minutes}분`;
+  };
+
+  // "216h 0m" 형식의 문자열을 "00시간 00분" 형식으로 변환하는 함수
+  const formatHoursMinutesString = (timeString: string) => {
+    if (!timeString) return "0시간 0분";
+    
+    const match = timeString.match(/(\d+)h\s*(\d+)m/);
+    if (match) {
+      const [, hours, minutes] = match;
+      return `${hours}시간 ${minutes}분`;
+    }
+    return "0시간 0분";
+  };
+
   if (!stats.daily_work_hours.length) {
     return (
       <Grid container spacing={3}>
@@ -623,117 +645,15 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
     );
   }
 
-  const getTimeAnalysis = () => {
-    const efficiency = stats.estimated_vs_actual;
-    
-    return (
-      <>
-        <Typography variant="h6" gutterBottom>
-          시간 관리 효율성 분석
-        </Typography>
-        
-        <Typography variant="body1" paragraph>
-          {`예상 대비 실제 소요 시간이 ${efficiency.toFixed(1)}%로, ${
-            efficiency <= 100
-              ? "매우 효율적으로 관리되고 있습니다."
-              : efficiency <= 120
-              ? "대체로 양호하나 일부 개선의 여지가 있습니다."
-              : "상당한 개선이 필요한 상황입니다."
-          }`}
-        </Typography>
-
-        <Typography variant="subtitle1" gutterBottom>
-          주요 시사점
-        </Typography>
-        <Box component="ul" sx={{ pl: 2, mb: 2 }}>
-          {efficiency <= 100 ? [
-            "정확한 작업 시간 추정 능력 보유",
-            "체계적인 시간 관리 역량 입증",
-            "효율적인 업무 처리 프로세스 구축"
-          ] : efficiency <= 120 ? [
-            "대체로 적절한 시간 관리 수행",
-            "일부 작업에서 시간 추정 정확도 상 필요",
-            "업무 프로세스 최적화 여 존재"
-          ] : [
-            "작업 시간 추정의 정확도 개선 필요",
-            "업무 처리 효율성 저하 우려",
-            "시간 관리 체계 재정립 검토 필요"
-          ].map((item, index) => (
-            <Typography component="li" key={index} paragraph>
-              {item}
-            </Typography>
-          ))}
-        </Box>
-
-        <Typography variant="subtitle1" gutterBottom>
-          일별 작업 시간 패턴 분석
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {getWorkingPatternAnalysis(stats.daily_work_hours)}
-        </Typography>
-
-        <Typography variant="subtitle1" gutterBottom>
-          개선 제안사항
-        </Typography>
-        <Box component="ul" sx={{ pl: 2 }}>
-          {getImprovementSuggestions(efficiency).map((item, index) => (
-            <Typography component="li" key={index} paragraph>
-              {item}
-            </Typography>
-          ))}
-        </Box>
-      </>
-    );
-  };
-
-  const getWorkingPatternAnalysis = (dailyHours: Array<{ date: string; hours: number }>) => {
-    const avgHours = dailyHours.reduce((sum, day) => sum + day.hours, 0) / dailyHours.length;
-    const maxHours = Math.max(...dailyHours.map(day => day.hours));
-    const minHours = Math.min(...dailyHours.map(day => day.hours));
-    const variance = dailyHours.reduce((sum, day) => sum + Math.pow(day.hours - avgHours, 2), 0) / dailyHours.length;
-
-    return `일평균 ${avgHours.toFixed(1)}시간의 작업 시간을 기록하고 있으며, 
-    최대 ${maxHours.toFixed(1)}시간에서 최소 ${minHours.toFixed(1)}시간까지 
-    ${variance < 2 ? '비교적 안정적인' : '다소 변동이 큰'} 패턴을 보이고 있습니다. ${
-      variance < 2 
-        ? '안정적인 업무 리듬이 형성되어 있어 긍정적입니다.' 
-        : '업무 시간의 안정적 관리를 위한 개선이 필요합니다.'
-    }`;
-  };
-
-  const getImprovementSuggestions = (efficiency: number) => {
-    if (efficiency <= 100) {
-      return [
-        "현재의 시간 관리 방식 문서화 및 표준화",
-        "팀 내 시간 관리 노우 공유",
-        "더 복잡한 프로젝트 수행 고려"
-      ];
-    } else if (efficiency <= 120) {
-      return [
-        "작업 시간 추정 정확도 향상을 위한 데이터 분석",
-        "업무 프로세스 효율화 포인트 발굴",
-        "시간 관리 도구 활용도 제고"
-      ];
-    } else {
-      return [
-        "작업 시간 추정 방식 면 재검토",
-        "업무 프로세스 병목 구간 분석",
-        "시간 관리 교육 프로그램 참여 검토",
-        "멘토링 또는 코칭 지원 요청"
-      ];
-    }
-  };
-
   return (
     <Grid container spacing={3}>
-      {/* 기존 카드 컴포넌트들 */}
       <Grid item xs={12} md={6}>
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
             평균 완료 시간
           </Typography>
           <Typography variant="h4">
-            {stats.average_completion_time || "-"}
+            {formatTimeToHoursMinutes(stats.average_completion_time)}
           </Typography>
         </Paper>
       </Grid>
@@ -748,7 +668,7 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
         </Paper>
       </Grid>
 
-      {/* 차트 */}
+      {/* 일별 작업 시간 차트 */}
       <Grid item xs={12}>
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -774,15 +694,108 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
         </Paper>
       </Grid>
 
-      {/* 분석 리포트 */}
+      {/* 시간 관리 분석 */}
       <Grid item xs={12}>
         <Paper sx={{ p: 3 }}>
-          {getTimeAnalysis()}
+          <Typography variant="h6" gutterBottom>
+            시간 관리 효율성 분석
+          </Typography>
+          
+          <Typography variant="body1" paragraph>
+            {`예상 대비 실제 소요 시간이 ${stats.estimated_vs_actual.toFixed(1)}%로, ${
+              stats.estimated_vs_actual <= 100
+                ? "매우 효율적으로 관리되고 있습니다."
+                : stats.estimated_vs_actual <= 120
+                ? "대체로 양호하나 일부 개선의 여지가 있습니다."
+                : "상당한 개선이 필요한 상황입니다."
+            }`}
+          </Typography>
+
+          <Typography variant="subtitle1" gutterBottom>
+            주요 시사점
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 2 }}>
+            {stats.estimated_vs_actual <= 100 ? [
+              "정확한 작업 시간 추정 능력 보유",
+              "체계적인 시간 관리 역량 입증",
+              "효율적인 업무 처리 프로세스 구축"
+            ] : stats.estimated_vs_actual <= 120 ? [
+              "대체로 적절한 시간 관리 수행",
+              "일부 작업에서 시간 추정 정확도 향상 필요",
+              "업무 프로세스 최적화 여지 존재"
+            ] : [
+              "작업 시간 추정의 정확도 개선 필요",
+              "업무 처리 효율성 저하 우려",
+              "시간 관리 체계 재정립 검토 필요"
+            ].map((item, index) => (
+              <Typography component="li" key={index} paragraph>
+                {item}
+              </Typography>
+            ))}
+          </Box>
+
+          <Typography variant="subtitle1" gutterBottom>
+            일별 작업 시간 패턴 분석
+          </Typography>
+          <Typography variant="body1" paragraph>
+            {getWorkingPatternAnalysis(stats.daily_work_hours)}
+          </Typography>
+
+          <Typography variant="subtitle1" gutterBottom>
+            개선 제안사항
+          </Typography>
+          <Box component="ul" sx={{ pl: 2 }}>
+            {getImprovementSuggestions(stats.estimated_vs_actual).map((item, index) => (
+              <Typography component="li" key={index} paragraph>
+                {item}
+              </Typography>
+            ))}
+          </Box>
         </Paper>
       </Grid>
     </Grid>
   );
 }
+
+// 작업 패턴 분석 함수
+const getWorkingPatternAnalysis = (dailyHours: Array<{ date: string; hours: number }>) => {
+  const avgHours = dailyHours.reduce((sum, day) => sum + day.hours, 0) / dailyHours.length;
+  const maxHours = Math.max(...dailyHours.map(day => day.hours));
+  const minHours = Math.min(...dailyHours.map(day => day.hours));
+  const variance = dailyHours.reduce((sum, day) => sum + Math.pow(day.hours - avgHours, 2), 0) / dailyHours.length;
+
+  return `일평균 ${avgHours.toFixed(1)}시간의 작업 시간을 기록하고 있으며, 
+  최대 ${maxHours.toFixed(1)}시간에서 최소 ${minHours.toFixed(1)}시간까지 
+  ${variance < 2 ? '비교적 안정적인' : '다소 변동이 큰'} 패턴을 보이고 있습니다. ${
+    variance < 2 
+      ? '안정적인 업무 리듬이 형성되어 있어 긍정적입니다.' 
+      : '업무 시간의 안정적 관리를 위한 개선이 필요합니다.'
+  }`;
+};
+
+// 개선 제안사항 함수
+const getImprovementSuggestions = (efficiency: number) => {
+  if (efficiency <= 100) {
+    return [
+      "현재의 시간 관리 방식 문서화 및 표준화",
+      "팀 내 시간 관리 노하우 공유",
+      "더 복잡한 프로젝트 수행 고려"
+    ];
+  } else if (efficiency <= 120) {
+    return [
+      "작업 시간 추정 정확도 향상을 위한 데이터 분석",
+      "업무 프로세스 효율화 포인트 발굴",
+      "시간 관리 도구 활용도 제고"
+    ];
+  } else {
+    return [
+      "작업 시간 추정 방식 전면 재검토",
+      "업무 프로세스 병목 구간 분석",
+      "시간 관리 교육 프로그램 참여 검토",
+      "멘토링 또는 코칭 지원 요청"
+    ];
+  }
+};
 
 // QualityStats 컴포넌트 수정
 function QualityStats({ stats }: { stats: PersonalReport["quality_stats"] }) {
@@ -855,7 +868,7 @@ function QualityStats({ stats }: { stats: PersonalReport["quality_stats"] }) {
         <Typography variant="body2" paragraph>
           {`검토 반려율이 ${review_rejection_rate.toFixed(1)}%로, ${
             review_rejection_rate > 20 
-              ? '개선이 필요한 수준입니다.' 
+              ? '개선��� 필요한 수준입니��.' 
               : review_rejection_rate > 10
               ? '주의가 필요한 수준입니다.'
               : '양호한 수준을 유지하고 있습니다.'
@@ -970,7 +983,7 @@ function DistributionStats({
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          우선순위 분포 분석
+          우선순위 분포 ���석
         </Typography>
         <Typography variant="body1" paragraph>
           {`전체 작업 중 높은 우선순위(긴급/높음) 작업이 ${highPriorityTasks.toFixed(1)}%를 차지하고 있어, ${
@@ -1062,7 +1075,7 @@ function DistributionStats({
       );
     }
 
-    return suggestions.length > 0 ? suggestions : ["현재 작업 분포는 적절한 수준을 유지하고 있습니다."];
+    return suggestions.length > 0 ? suggestions : ["재 작업 분포는 절한 수준을 유지하고 있습니다."];
   };
 
   const getPriorityLabel = (priority: string) => {
@@ -1211,109 +1224,50 @@ function DistributionStats({
 
 // 비교 분석 컴포넌트
 function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["comparison_stats"]> }) {
-  // 작업이 없는 경우의 처리
-  const hasTeamData = stats.team_comparison.team_avg_score > 0;
-  const hasDeptData = stats.department_comparison.dept_avg_score > 0;
-
-  // 선택된 기간에 작업이 없는 경우
-  if (!hasTeamData && !hasDeptData) {
-    return (
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              비교 분석 안내
-            </Typography>
-            <Typography variant="body1" paragraph>
-              선택하신 기간 동안의 작업 데이터가 없어 성과 비교 분석을 제공할 수 없습니다.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              팀과 부서의 평균 성과는 다음과 같습니다:
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                팀 평균 성과
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                • 평균 완료 시간: {stats.team_comparison.team_avg_completion_time}
-                <br />
-                • 평균 평가 점수: {stats.team_comparison.team_avg_score.toFixed(1)}/5.0
-              </Typography>
-              <Typography variant="subtitle2" gutterBottom>
-                부서 평균 성과
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • 평균 완료 시간: {stats.department_comparison.dept_avg_completion_time}
-                <br />
-                • 평균 평가 점수: {stats.department_comparison.dept_avg_score.toFixed(1)}/5.0
-              </Typography>
-            </Box>
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              작업이 배정되고 수행되면 팀 및 부서 평균과의 상세 비교 분석이 제공됩니다.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    );
-  }
-
-  const getScoreComparison = (myScore: number, comparisonScore: number) => {
-    if (!myScore || !comparisonScore) return "비교 데이터 없음";
+  const formatHoursMinutesString = (timeString: string) => {
+    if (!timeString) return "0시간 0분";
     
-    const difference = ((myScore - comparisonScore) / comparisonScore) * 100;
-    const diffStr = Math.abs(difference).toFixed(1);
-    
-    if (Math.abs(difference) < 5) return "비슷한 수준";
-    return difference > 0 
-      ? `${diffStr}% 더 높음`
-      : `${diffStr}% 더 낮음`;
-  };
-
-  const getPerformanceLevel = (score: number, avgScore: number) => {
-    if (!score || !avgScore) return "평가 불가";
-    
-    const difference = ((score - avgScore) / avgScore) * 100;
-    
-    if (difference >= 15) return "상위";
-    if (difference >= 5) return "중상위";
-    if (difference >= -5) return "평균";
-    if (difference >= -15) return "중하위";
-    return "하위";
-  };
-
-  const getTeamComparisonAnalysis = () => {
-    const myScore = stats.team_comparison.team_avg_score;
-    const teamScore = stats.team_comparison.team_avg_score;
-    const scoreComparison = getScoreComparison(myScore, teamScore);
-    const performanceLevel = getPerformanceLevel(myScore, teamScore);
-
-    return `팀 평균과 비교했을 때 평가 점수는 ${scoreComparison}이며, 
-    이는 팀 내 ${performanceLevel} 수준입니다. ${
-      performanceLevel === "상위" || performanceLevel === "중상위"
-        ? "팀 내에서 우수한 성과를 보이고 있습니다."
-        : performanceLevel === "평균"
-        ? "팀 평균 수준의 안정적인 성과를 보이고 있습니다."
-        : "팀 평균 수준으로의 개선 여지가 있습니다."
-    }`;
-  };
-
-  const getDepartmentComparisonAnalysis = () => {
-    const myScore = stats.team_comparison.team_avg_score;
-    const deptScore = stats.department_comparison.dept_avg_score;
-    const scoreComparison = getScoreComparison(myScore, deptScore);
-    const performanceLevel = getPerformanceLevel(myScore, deptScore);
-
-    return `부서 평균과 비교했을 때 평가 점수는 ${scoreComparison}이며, 
-    이는 부서 내 ${performanceLevel} 수준입니다. ${
-      performanceLevel === "상위" || performanceLevel === "중상위"
-        ? "부서 내에서 우수한 성과를 보여주고 있습니다."
-        : performanceLevel === "평균"
-        ? "부서 평균 수준의 안정적인 성과를 보여주고 있습니다."
-        : "부서 평균 수준으로의 성장 가능성이 있습니다."
-    }`;
+    const match = timeString.match(/(\d+)h\s*(\d+)m/);
+    if (match) {
+      const [, hours, minutes] = match;
+      return `${hours}시간 ${minutes}분`;
+    }
+    return "0시간 0분";
   };
 
   const getComparisonAnalysis = () => {
+    const getTeamComparisonAnalysis = () => {
+      const myScore = stats.team_comparison.my_score || 0;
+      const teamScore = stats.team_comparison.team_avg_score;
+      const scoreComparison = getScoreComparison(myScore, teamScore);
+      const performanceLevel = getPerformanceLevel(myScore, teamScore);
+
+      return `팀 평균과 비교했을 때 평가 점수는 ${scoreComparison}이며, 
+      이는 팀 내 ${performanceLevel} 수준입니다. ${
+        performanceLevel === "상위" || performanceLevel === "중상위"
+          ? "팀 내에서 우수한 성과를 보이고 있습니다."
+          : performanceLevel === "평균"
+          ? "팀 평균 수준의 안정적인 성과를 보이고 있습니다."
+          : "팀 평균 수준으로 개선 여지가 있습니다."
+      }`;
+    };
+
+    const getDepartmentComparisonAnalysis = () => {
+      const myScore = stats.team_comparison.team_avg_score;
+      const deptScore = stats.department_comparison.dept_avg_score;
+      const scoreComparison = getScoreComparison(myScore, deptScore);
+      const performanceLevel = getPerformanceLevel(myScore, deptScore);
+
+      return `부서 평균과 비교했을 때 평가 점수는 ${scoreComparison}이며, 
+      이는 부서 내 ${performanceLevel} 수준입니다. ${
+        performanceLevel === "상위" || performanceLevel === "중상위"
+          ? "부서 내에서 우수한 성과를 보여주고 있습니다."
+          : performanceLevel === "평균"
+          ? "부서 평균 수준의 안정적인 성과를 보여주고 있습니다."
+          : "부서 평균 수준으로의 성장 가능성이 있습니다."
+      }`;
+    };
+
     return (
       <>
         <Typography variant="h6" gutterBottom>
@@ -1348,6 +1302,30 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     );
   };
 
+  const getScoreComparison = (myScore: number, comparisonScore: number) => {
+    if (!myScore || !comparisonScore) return "비교 데이터 없음";
+    
+    const difference = ((myScore - comparisonScore) / comparisonScore) * 100;
+    const diffStr = Math.abs(difference).toFixed(1);
+    
+    if (Math.abs(difference) < 5) return "비슷한 수준";
+    return difference > 0 
+      ? `${diffStr}% 더 높음`
+      : `${diffStr}% 더 낮음`;
+  };
+
+  const getPerformanceLevel = (score: number, avgScore: number) => {
+    if (!score || !avgScore) return "평가 불가";
+    
+    const difference = ((score - avgScore) / avgScore) * 100;
+    
+    if (difference >= 15) return "상위";
+    if (difference >= 5) return "중상위";
+    if (difference >= -5) return "평균";
+    if (difference >= -15) return "중하위";
+    return "하위";
+  };
+
   const getImprovementSuggestions = () => {
     const suggestions = [];
     
@@ -1376,75 +1354,15 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
   };
 
   const isPerformingBetterThanTeam = () => {
-    try {
-      const myTime = parseTimeToMinutes(stats.team_comparison.team_avg_completion_time);
-      const teamTime = parseTimeToMinutes(stats.team_comparison.team_avg_completion_time);
-      const myScore = stats.team_comparison.team_avg_score;
-      const teamScore = stats.team_comparison.team_avg_score;
-      
-      // 데이터가 불완전한 경우
-      if (!myTime || !teamTime || !myScore || !teamScore) {
-        return false;
-      }
-      
-      // 작업 시간이 더 짧거나 같고(<=), 평가 점수가 더 높거나 같은(>=) 경우에만 true 반환
-      return myTime <= teamTime && myScore >= teamScore;
-    } catch (error) {
-      console.error("Team performance comparison error:", error);
-      return false;
-    }
+    const myScore = stats.team_comparison.team_avg_score;
+    const teamScore = stats.team_comparison.team_avg_score;
+    return myScore > teamScore;
   };
 
   const isPerformingBetterThanDepartment = () => {
-    try {
-      const myTime = parseTimeToMinutes(stats.department_comparison.dept_avg_completion_time);
-      const deptTime = parseTimeToMinutes(stats.department_comparison.dept_avg_completion_time);
-      const myScore = stats.team_comparison.team_avg_score;
-      const deptScore = stats.department_comparison.dept_avg_score;
-      
-      // 데이터가 불완전한 경우
-      if (!myTime || !deptTime || !myScore || !deptScore) {
-        return false;
-      }
-      
-      // 작업 시간이 더 짧거나 같고(<=), 평가 점수가 더 높거나 같은(>=) 경우에만 true 반환
-      return myTime <= deptTime && myScore >= deptScore;
-    } catch (error) {
-      console.error("Department performance comparison error:", error);
-      return false;
-    }
-  };
-
-  const parseTimeToMinutes = (timeString: string): number => {
-    try {
-      if (!timeString) return 0;
-      
-      // "2h 30m" 형식 파싱
-      const hourMinuteMatch = timeString.match(/(\d+)h\s*(\d+)m/);
-      if (hourMinuteMatch) {
-        const hours = parseInt(hourMinuteMatch[1]);
-        const minutes = parseInt(hourMinuteMatch[2]);
-        return hours * 60 + minutes;
-      }
-      
-      // "1.5h" 형식 파싱
-      const hourOnlyMatch = timeString.match(/(\d+\.?\d*)h/);
-      if (hourOnlyMatch) {
-        const hours = parseFloat(hourOnlyMatch[1]);
-        return Math.round(hours * 60);
-      }
-      
-      // "45m" 형식 파싱
-      const minuteOnlyMatch = timeString.match(/(\d+)m/);
-      if (minuteOnlyMatch) {
-        return parseInt(minuteOnlyMatch[1]);
-      }
-      
-      return 0;
-    } catch (error) {
-      console.error("Time parsing error:", error);
-      return 0;
-    }
+    const myScore = stats.team_comparison.team_avg_score;
+    const deptScore = stats.department_comparison.dept_avg_score;
+    return myScore > deptScore;
   };
 
   return (
@@ -1455,18 +1373,44 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
             팀 비교
           </Typography>
           <Box>
-            <Typography variant="body2" color="text.secondary">
-              팀 평균 완료 시간
-            </Typography>
-            <Typography variant="h6">
-              {stats.team_comparison.team_avg_completion_time || "-"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              팀 평균 평가 점수
-            </Typography>
-            <Typography variant="h6">
-              {stats.team_comparison.team_avg_score?.toFixed(1) || "-"} / 5.0
-            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">
+                  내 완료 시간
+                </Typography>
+                <Typography variant="h6">
+                  {formatHoursMinutesString(stats.team_comparison.my_completion_time)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  내 평가 점수
+                </Typography>
+                <Typography variant="h6">
+                  {stats.team_comparison.my_score?.toFixed(1) || "-"} / 5.0
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">
+                  팀 평균 완료 시간
+                </Typography>
+                <Typography variant="h6">
+                  {formatHoursMinutesString(stats.team_comparison.team_avg_completion_time)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  팀 평균 평가 점수
+                </Typography>
+                <Typography variant="h6">
+                  {stats.team_comparison.team_avg_score?.toFixed(1) || "-"} / 5.0
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  상대적 효율성
+                </Typography>
+                <Typography variant="h6" color={stats.team_comparison.relative_efficiency >= 100 ? "success.main" : "error.main"}>
+                  {stats.team_comparison.relative_efficiency.toFixed(1)}%
+                </Typography>
+              </Grid>
+            </Grid>
           </Box>
         </Paper>
       </Grid>
@@ -1476,18 +1420,44 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
             부서 비교
           </Typography>
           <Box>
-            <Typography variant="body2" color="text.secondary">
-              부서 평균 완료 시간
-            </Typography>
-            <Typography variant="h6">
-              {stats.department_comparison.dept_avg_completion_time || "-"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              부서 평균 평가 점수
-            </Typography>
-            <Typography variant="h6">
-              {stats.department_comparison.dept_avg_score?.toFixed(1) || "-"} / 5.0
-            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">
+                  내 완료 시간
+                </Typography>
+                <Typography variant="h6">
+                  {formatHoursMinutesString(stats.department_comparison.my_completion_time)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  내 평가 점수
+                </Typography>
+                <Typography variant="h6">
+                  {stats.team_comparison.team_avg_score?.toFixed(1) || "-"} / 5.0
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">
+                  부서 평균 완료 시간
+                </Typography>
+                <Typography variant="h6">
+                  {formatHoursMinutesString(stats.department_comparison.dept_avg_completion_time)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  부서 평균 평가 점수
+                </Typography>
+                <Typography variant="h6">
+                  {stats.department_comparison.dept_avg_score?.toFixed(1) || "-"} / 5.0
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  상대적 효율성
+                </Typography>
+                <Typography variant="h6" color={stats.department_comparison.relative_efficiency >= 100 ? "success.main" : "error.main"}>
+                  {stats.department_comparison.relative_efficiency.toFixed(1)}%
+                </Typography>
+              </Grid>
+            </Grid>
           </Box>
         </Paper>
       </Grid>

@@ -41,17 +41,15 @@ export interface PersonalReport {
       team_avg_completion_time: string;
       team_avg_score: number;
       my_completion_time: string;
+      my_score: number;
       relative_efficiency: number;
-      relative_quality: number;
-      rank_in_team: number;
     };
     department_comparison: {
       dept_avg_completion_time: string;
       dept_avg_score: number;
       my_completion_time: string;
+      my_score: number;
       relative_efficiency: number;
-      relative_quality: number;
-      rank_in_department: number;
     };
   };
   trend_analysis: {
