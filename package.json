@@ -19,6 +19,7 @@
     "@tanstack/react-query-devtools": "^5.59.16",
     "axios": "^1.7.7",
     "date-fns": "2.29.3",
+    "framer-motion": "^11.11.11",
     "mobx": "^6.13.5",
     "mobx-react": "^9.1.1",
     "next": "15.0.2",

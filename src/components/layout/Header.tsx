@@ -71,16 +71,61 @@ const Header = observer(() => {
   return (
     <AppBar
       position="sticky"
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      elevation={0}
+      sx={{
+        backgroundColor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        color: "text.primary",
+      }}
     >
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            flexGrow: 1,
+            fontWeight: 600,
+            background: "linear-gradient(45deg, #2563eb 30%, #3b82f6 90%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           Govis Task Management
         </Typography>
 
         {authStore.isAuthenticated && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <NotificationDropdown />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <IconButton
+              size="large"
+              onClick={handleNotificationClick}
+              sx={{ 
+                transition: "transform 0.2s",
+                "&:hover": { transform: "scale(1.1)" } 
+              }}
+            >
+              <Badge badgeContent={notificationCount?.count || 0} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+            
+            <IconButton
+              onClick={handleProfileClick}
+              sx={{
+                transition: "transform 0.2s",
+                "&:hover": { transform: "scale(1.1)" }
+              }}
+            >
+              <Avatar 
+                sx={{ 
+                  bgcolor: "primary.main",
+                  width: 35,
+                  height: 35,
+                }}
+              >
+                {authStore.user?.first_name?.[0]}
+              </Avatar>
+            </IconButton>
           </Box>
         )}
 
@@ -90,7 +135,14 @@ const Header = observer(() => {
           open={Boolean(notificationAnchorEl)}
           onClose={handleNotificationClose}
           PaperProps={{
-            sx: { width: 320, maxHeight: 400 },
+            elevation: 3,
+            sx: { 
+              width: 320, 
+              maxHeight: 400,
+              mt: 1.5,
+              borderRadius: 2,
+              overflow: 'hidden'
+            },
           }}
         >
           <MenuItem onClick={() => router.push("/notifications")}>
@@ -103,6 +155,14 @@ const Header = observer(() => {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleClose}
+          PaperProps={{
+            elevation: 3,
+            sx: { 
+              minWidth: 200,
+              mt: 1.5,
+              borderRadius: 2
+            },
+          }}
         >
           <MenuItem onClick={handleProfilePage}>
             <ListItemIcon>
