@@ -19,6 +19,7 @@ import {
   Schedule,
   Assessment,
   GradeRounded,
+  Business,
 } from "@mui/icons-material";
 import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
@@ -43,18 +44,25 @@ const Sidebar = observer(() => {
 
     // 관리자 메뉴 아이템
     const adminMenuItems = [
-      { text: "직원 관리", icon: <People />, path: "/users/manage" },
-      { text: "직원 목록", icon: <People />, path: "/users" },
+      { text: "직원 관리", icon: <People />, path: "/users" },      
       { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
-      { text: "통계", icon: <Assessment />, path: "/statistics" },
+      { text: "통계", icon: <Assessment />, path: "/reports" },
     ];
 
-    // ADMIN, DIRECTOR, GENERAL_MANAGER, MANAGER만 직원 관리 메뉴 표시
-    if (user?.role === "ADMIN" || 
-        user?.rank === "DIRECTOR" ||
-        user?.rank === "GENERAL_MANAGER" || 
+    const reportMenuItems = [
+      { text: "부서/팀 관리", icon: <Business />, path: "/departments/manage" },     
+      { text: "직원 등록", icon: <People />, path: "/users/manage" },
+    ];
+
+    // ADMIN, DIRECTOR만 부서 관리 메뉴 표시
+    if (user?.role === "ADMIN" || user?.rank === "DIRECTOR") {
+      return [...baseMenuItems, ...adminMenuItems, ...reportMenuItems];
+    }
+
+    // GENERAL_MANAGER, MANAGER는 부서 관리 메뉴 제외
+    if (user?.rank === "GENERAL_MANAGER" || 
         (user?.role === "MANAGER" && user?.rank !== "STAFF")) {
-      return [...baseMenuItems, ...adminMenuItems];
+      return [...baseMenuItems, ...adminMenuItems.filter(item => item.text !== "부서/팀 관리")];
     }
 
     return baseMenuItems;
