@@ -9,6 +9,7 @@ import {
   Typography,
   Divider,
   ListItemButton,
+  alpha,
 } from "@mui/material";
 import {
   Dashboard,
@@ -35,42 +36,48 @@ const Sidebar = observer(() => {
 
   // 권한에 따른 메뉴 필터링
   const getFilteredMenuItems = () => {
-    const baseMenuItems = [
-      { text: "대시보드", icon: <Dashboard />, path: "/" },
-      { text: "내 작업", icon: <AssignmentTurnedIn />, path: "/my-tasks" },
-      { text: "일정", icon: <Assignment />, path: "/tasks" },
-      { text: "알림", icon: <Notifications />, path: "/notifications" },
+    const menuSection = [
+      { 
+        title: "메뉴",
+        items: [
+          { text: "대시보드", icon: <Dashboard />, path: "/" },
+          { text: "내 작업", icon: <AssignmentTurnedIn />, path: "/my-tasks" },
+          { text: "일정", icon: <Assignment />, path: "/tasks" },
+          { text: "알림", icon: <Notifications />, path: "/notifications" },
+        ]
+      }
     ];
 
-    // 관리자 메뉴 아이템
-    const adminMenuItems = [
-      { text: "직원 관리", icon: <People />, path: "/users" },      
-      { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
-      { text: "통계", icon: <Assessment />, path: "/reports" },
-    ];
+    const managementSection = {
+      title: "관리",
+      items: [
+        { text: "직원 관리", icon: <People />, path: "/users" },      
+        { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
+        { text: "통계", icon: <Assessment />, path: "/reports" },
+      ]
+    };
 
-    const reportMenuItems = [
-      { text: "부서/팀 관리", icon: <Business />, path: "/departments/manage" },     
-      { text: "직원 등록", icon: <People />, path: "/users/manage" },
-    ];
+    const adminSection = {
+      title: "시스템 관리",
+      items: [
+        { text: "부서/팀 관리", icon: <Business />, path: "/departments/manage" },     
+        { text: "직원 등록", icon: <People />, path: "/users/manage" },
+      ]
+    };
 
-    // ADMIN, DIRECTOR만 부서 관리 메뉴 표시
+    const sections = [...menuSection];
+
     if (user?.role === "ADMIN" || user?.rank === "DIRECTOR") {
-      return [...baseMenuItems, ...adminMenuItems, ...reportMenuItems];
-    }
-
-    // GENERAL_MANAGER, MANAGER는 부서 관리 메뉴 제외
-    if (user?.rank === "GENERAL_MANAGER" || 
+      sections.push(managementSection, adminSection);
+    } else if (user?.rank === "GENERAL_MANAGER" || 
         (user?.role === "MANAGER" && user?.rank !== "STAFF")) {
-      return [...baseMenuItems, ...adminMenuItems.filter(item => item.text !== "부서/팀 관리")];
+      sections.push(managementSection);
     }
 
-    return baseMenuItems;
+    return sections;
   };
 
-  
-
-  const menuItems = getFilteredMenuItems();
+  const sections = getFilteredMenuItems();
 
   return (
     <Drawer
@@ -107,52 +114,81 @@ const Sidebar = observer(() => {
           </Box>
         </Box>
         <Divider />
-        <List>
-          {menuItems.map((item) => {
-            const isActive = router.pathname === item.path;
+        
+        {sections.map((section, index) => (
+          <Box key={section.title} sx={{ mt: index !== 0 ? 2 : 0 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                px: 3,
+                py: 1.5,
+                display: 'block',
+                color: 'text.secondary',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {section.title}
+            </Typography>
+            <List sx={{ pb: 0 }}>
+              {section.items.map((item) => {
+                const isActive = router.pathname === item.path;
 
-            return (
-              <Link
-                href={item.path}
-                key={item.text}
-                passHref
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <ListItem disablePadding>
-                  <ListItemButton
-                    selected={isActive}
-                    sx={{
-                      "&.Mui-selected": {
-                        backgroundColor: "primary.main",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "primary.dark",
-                        },
-                        "& .MuiListItemIcon-root": {
-                          color: "white",
-                        },
-                      },
-                    }}
+                return (
+                  <Link
+                    href={item.path}
+                    key={item.text}
+                    passHref
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
-                    <ListItemIcon
-                      sx={{
-                        color: isActive ? "white" : "inherit",
-                      }}
-                    >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.text}
-                      primaryTypographyProps={{
-                        fontSize: "0.9rem",
-                      }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              </Link>
-            );
-          })}
-        </List>
+                    <ListItem disablePadding>
+                      <ListItemButton
+                        selected={isActive}
+                        sx={{
+                          mx: 1,
+                          borderRadius: 1,
+                          "&.Mui-selected": {
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.9),
+                            color: "white",
+                            "&:hover": {
+                              backgroundColor: "primary.main",
+                            },
+                            "& .MuiListItemIcon-root": {
+                              color: "white",
+                            },
+                          },
+                          "&:hover": {
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                          }
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            color: isActive ? "white" : "inherit",
+                            minWidth: 40,
+                          }}
+                        >
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={item.text}
+                          primaryTypographyProps={{
+                            fontSize: "0.9rem",
+                            fontWeight: isActive ? 600 : 400,
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  </Link>
+                );
+              })}
+            </List>
+            {index !== sections.length - 1 && (
+              <Divider sx={{ mt: 1, mx: 2, opacity: 0.7 }} />
+            )}
+          </Box>
+        ))}
       </Box>
     </Drawer>
   );
