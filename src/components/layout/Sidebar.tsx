@@ -43,7 +43,8 @@ const Sidebar = observer(() => {
 
     // 관리자 메뉴 아이템
     const adminMenuItems = [
-      { text: "직원 관리", icon: <People />, path: "/users" },
+      { text: "직원 관리", icon: <People />, path: "/users/manage" },
+      { text: "직원 목록", icon: <People />, path: "/users" },
       { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
       { text: "통계", icon: <Assessment />, path: "/statistics" },
     ];
