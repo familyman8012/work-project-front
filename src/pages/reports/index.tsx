@@ -218,14 +218,19 @@ function PersonalReportPage() {
 
         {report ? (
           <>
-            {/* 탭 뉴 */}
+            {/* 탭 메뉴 */}
             <Paper sx={{ mb: 3 }}>
-              <Tabs value={currentTab} onChange={handleTabChange}>
+              <Tabs 
+                value={currentTab} 
+                onChange={handleTabChange}
+                variant="scrollable"
+                scrollButtons="auto"
+              >
                 <Tab label="기본 통계" />
                 <Tab label="시간 관리" />
                 <Tab label="품질 지표" />
                 <Tab label="작업 분포" />
-                {report.comparison_stats && <Tab label="비교 분석" />}
+                <Tab label="비교 분석" />
               </Tabs>
             </Paper>
 
@@ -242,7 +247,7 @@ function PersonalReportPage() {
             {currentTab === 3 && (
               <DistributionStats stats={report.distribution_stats} />
             )}
-            {currentTab === 4 && report.comparison_stats && (
+            {currentTab === 4 && (
               <ComparisonStats stats={report.comparison_stats} />
             )}
           </>
@@ -424,7 +429,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
     // 지연 작업 관련 개선사항
     if (delayRate >= 30) {
       suggestions.push(`
-        [심각 지연 작업 개선 최우선 과제]
+        [심각 지연 작업 선 최우선 과제]
         현재 ${stats.delayed_tasks}건(${delayRate.toFixed(1)}%)의 높 지연율이 발생하고 있어 즉각적인 조치가 필요합니다:
         
         1. 긴급 태스크포스 구성
@@ -483,9 +488,9 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
     if (completionRate < 50) {
       suggestions.push(`
         [낮은 완료율 개선 긴급 방안]
-        ${completionRate.toFixed(1)}%의 저조한 완료율 개선을 위한 긴급 조치사항:
+        ${completionRate.toFixed(1)}%의 저조한 완료율 개선을 위한 급 조치사항:
         
-        1. 작업 완료 프로세스 전면 재검토
+        1. 작업 완료 로세스 전면 재검토
            - 병목구간 식별 및 제거
            - 의사결정 단계 간소화
         
@@ -519,13 +524,13 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
            ? '업무 완료율 향상을 위한 태스크 관리 시스템 개선' 
            : '높은 업무 완료율을 활용한 모범 사례 공유 및 전파'}
       3. ${stats.in_progress_tasks > 5 
-           ? '진행 중인 작업의 우선순위 재검토 및 조정' 
+           ? '진행 중인 작업의 우선순 재검토 및 조정' 
            : '추가 업무 수용을 위한 역량 개발 계획 수립'}
 
       [중장기 발전과제]
       1. 업무 수행 역량 고도화
          - 전문 강화를 위 교육 프로그램 참여
-         - 업무 관련 자격증 취득 및 스킬 향상
+         - 업무 관련 자증 취득 및 스킬 향상
       
       2. 프로젝트 관리 능력 배양
          - 복잡한 다중 작업 관리 능력 향상
@@ -868,9 +873,9 @@ function QualityStats({ stats }: { stats: PersonalReport["quality_stats"] }) {
         <Typography variant="body2" paragraph>
           {`검토 반려율이 ${review_rejection_rate.toFixed(1)}%로, ${
             review_rejection_rate > 20 
-              ? '개선��� 필요한 수준입니��.' 
+              ? '개선 필요한 수준입니.' 
               : review_rejection_rate > 10
-              ? '주의가 필요한 수준입니다.'
+              ? '주가 필요한 수준입니다.'
               : '양호한 수준을 유지하고 있습니다.'
           }`}
         </Typography>
@@ -983,12 +988,12 @@ function DistributionStats({
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          우선순위 분포 ���석
+          우선순위 분포 석
         </Typography>
         <Typography variant="body1" paragraph>
           {`전체 작업 중 높은 우선순위(긴급/높음) 작업이 ${highPriorityTasks.toFixed(1)}%를 차지하고 있어, ${
             highPriorityTasks > 50
-              ? "업무 부하가 높은 상황입니다. 우선순위 재조정 및 자원 배분 검토가 필요합니다."
+              ? "업무 부하가 높은 상황입니다. 우선순위 재조정 및 원 배분 검토가 필요니다."
               : highPriorityTasks > 30
               ? "적정 수준의 업무 강도를 유지하고 있습니다."
               : "비교적 여유있는 업무 상황을 보이고 있습니다."
@@ -1022,7 +1027,7 @@ function DistributionStats({
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          개선 제안사항
+          개선 안사항
         </Typography>
         <Box component="ul" sx={{ pl: 2 }}>
           {getImprovement().map((item, index) => (
@@ -1049,7 +1054,7 @@ function DistributionStats({
       .filter(item => ["HARD", "VERY_HARD"].includes(item.difficulty))
       .reduce((sum, item) => sum + item.count, 0) / total) * 100;
 
-    // 진행중 작업 비율 계산
+    // 진행중 작업 비 계산
     const inProgressRate = (stats.status_distribution
       .filter(item => item.status === "IN_PROGRESS")
       .reduce((sum, item) => sum + item.count, 0) / total) * 100;
@@ -1057,7 +1062,7 @@ function DistributionStats({
     if (highPriorityRate > 50) {
       suggestions.push(
         "우선순위 재검토 및 조정이 필요합니다.",
-        "업무 분산을 위한 자원 재배치를 고려하세요."
+        "업무 분산을 위한 자원 재배를 고려하세요."
       );
     }
 
@@ -1224,7 +1229,26 @@ function DistributionStats({
 
 // 비교 분석 컴포넌트
 function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["comparison_stats"]> }) {
-  const formatHoursMinutesString = (timeString: string) => {
+  // 데이터가 없을 때 표시할 컴포넌트
+  if (!stats) {
+    return (
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              비교 분석 데이터 없음
+            </Typography>
+            <Typography variant="body1">
+              현재 기간 동안의 비교 분석 데이터가 없습니다.
+              작업이 완료되고 평가가 이루어지면 팀 및 부서와의 비교 분석이 자동으로 생성됩니다.
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+    );
+  }
+
+  const formatHoursMinutesString = (timeString: string | null | undefined) => {
     if (!timeString) return "0시간 0분";
     
     const match = timeString.match(/(\d+)h\s*(\d+)m/);
@@ -1237,7 +1261,7 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
 
   const getComparisonAnalysis = () => {
     const getTeamComparisonAnalysis = () => {
-      const myScore = stats.team_comparison.my_score || 0;
+      const myScore = stats.team_comparison.my_score;
       const teamScore = stats.team_comparison.team_avg_score;
       const scoreComparison = getScoreComparison(myScore, teamScore);
       const performanceLevel = getPerformanceLevel(myScore, teamScore);
@@ -1253,7 +1277,7 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     };
 
     const getDepartmentComparisonAnalysis = () => {
-      const myScore = stats.team_comparison.team_avg_score;
+      const myScore = stats.department_comparison.my_score;
       const deptScore = stats.department_comparison.dept_avg_score;
       const scoreComparison = getScoreComparison(myScore, deptScore);
       const performanceLevel = getPerformanceLevel(myScore, deptScore);
@@ -1302,8 +1326,10 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     );
   };
 
-  const getScoreComparison = (myScore: number, comparisonScore: number) => {
-    if (!myScore || !comparisonScore) return "비교 데이터 없음";
+  const getScoreComparison = (myScore: number | null | undefined, comparisonScore: number | null | undefined) => {
+    if (!myScore || !comparisonScore) {
+      return "데이터 없음";
+    }
     
     const difference = ((myScore - comparisonScore) / comparisonScore) * 100;
     const diffStr = Math.abs(difference).toFixed(1);
@@ -1314,8 +1340,10 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
       : `${diffStr}% 더 낮음`;
   };
 
-  const getPerformanceLevel = (score: number, avgScore: number) => {
-    if (!score || !avgScore) return "평가 불가";
+  const getPerformanceLevel = (score: number | null | undefined, avgScore: number | null | undefined) => {
+    if (!score || !avgScore) {
+      return "평가 불가";
+    }
     
     const difference = ((score - avgScore) / avgScore) * 100;
     
@@ -1365,6 +1393,16 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     return myScore > deptScore;
   };
 
+  const getEfficiencyColor = (efficiency: number | null | undefined) => {
+    if (!efficiency) return "text.secondary";
+    return efficiency >= 100 ? "success.main" : "error.main";
+  };
+
+  const getEfficiencyText = (efficiency: number | null | undefined) => {
+    if (!efficiency) return "데이터 없음";
+    return `${efficiency.toFixed(1)}%`;
+  };
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
@@ -1406,8 +1444,8 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                   상대적 효율성
                 </Typography>
-                <Typography variant="h6" color={stats.team_comparison.relative_efficiency >= 100 ? "success.main" : "error.main"}>
-                  {stats.team_comparison.relative_efficiency.toFixed(1)}%
+                <Typography variant="h6" color={getEfficiencyColor(stats.team_comparison.relative_efficiency)}>
+                  {getEfficiencyText(stats.team_comparison.relative_efficiency)}
                 </Typography>
               </Grid>
             </Grid>
@@ -1432,7 +1470,7 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
                   내 평가 점수
                 </Typography>
                 <Typography variant="h6">
-                  {stats.team_comparison.team_avg_score?.toFixed(1) || "-"} / 5.0
+                  {stats.department_comparison.my_score?.toFixed(1) || "-"} / 5.0
                 </Typography>
               </Grid>
               <Grid item xs={6}>
@@ -1453,8 +1491,8 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                   상대적 효율성
                 </Typography>
-                <Typography variant="h6" color={stats.department_comparison.relative_efficiency >= 100 ? "success.main" : "error.main"}>
-                  {stats.department_comparison.relative_efficiency.toFixed(1)}%
+                <Typography variant="h6" color={getEfficiencyColor(stats.department_comparison.relative_efficiency)}>
+                  {getEfficiencyText(stats.department_comparison.relative_efficiency)}
                 </Typography>
               </Grid>
             </Grid>
