@@ -24,6 +24,7 @@ import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { getRankText } from "@/lib/getRankText";
 
 const drawerWidth = 280;
 
@@ -58,6 +59,8 @@ const Sidebar = observer(() => {
     return baseMenuItems;
   };
 
+  
+
   const menuItems = getFilteredMenuItems();
 
   return (
@@ -83,14 +86,10 @@ const Sidebar = observer(() => {
             </Avatar>
             <Box>
               <Typography variant="h6">
-                {user?.first_name} {user?.last_name}
+              {user?.last_name}{user?.first_name} 
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {user?.role === "ADMIN"
-                  ? "관리자"
-                  : user?.role === "MANAGER"
-                  ? "매니저"
-                  : "직원"}
+                {getRankText(String(user?.rank))}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {user?.department_name}

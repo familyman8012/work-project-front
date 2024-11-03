@@ -143,7 +143,7 @@ function TasksPage() {
           alignItems="center"
           mb={3}
         >
-          <Typography variant="h5">회사 작업 리스트</Typography>
+          <Typography variant="h5">일정</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}

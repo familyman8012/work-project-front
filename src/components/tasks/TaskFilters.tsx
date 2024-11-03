@@ -158,7 +158,7 @@ const TaskFilters = ({
         {/* 검색창 수정 */}
         <TextField
           size="small"
-          placeholder="작업명 또는 담당자 이름으로 검색 후 엔터..."
+          placeholder="작업명 또는 담당자 이름으로 검색 후 엔터"
           value={searchInput}
           onChange={handleSearchInputChange}
           onKeyPress={handleKeyPress}
@@ -169,7 +169,7 @@ const TaskFilters = ({
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 300 }}
+          sx={{ minWidth: 370 }}
         />
         {/* 상태 필터 */}
         {!hideFilters.includes("status") && (
@@ -226,6 +226,8 @@ const TaskFilters = ({
             </Select>
           </FormControl>
         )}
+        </Box>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", marginTop: "20px" }}>
         {/* 날짜 범위 필터 */}
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
           <DatePicker

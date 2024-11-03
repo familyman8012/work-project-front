@@ -2,6 +2,7 @@ import { Box, Card, CardContent, Typography, Divider } from "@mui/material";
 import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
 import { Person } from "@mui/icons-material";
+import { getRankText } from "@/lib/getRankText";
 
 const UserInfoCard = observer(() => {
   const user = authStore.user;
@@ -16,27 +17,6 @@ const UserInfoCard = observer(() => {
         return "일반 직원";
       default:
         return role;
-    }
-  };
-
-  const getRankText = (rank: string) => {
-    switch (rank) {
-      case "STAFF":
-        return "사원";
-      case "SENIOR":
-        return "주임";
-      case "ASSISTANT_MANAGER":
-        return "대리";
-      case "MANAGER":
-        return "과장";
-      case "DEPUTY_GENERAL_MANAGER":
-        return "차장";
-      case "GENERAL_MANAGER":
-        return "본부장";
-      case "DIRECTOR":
-        return "이사";
-      default:
-        return rank;
     }
   };
 

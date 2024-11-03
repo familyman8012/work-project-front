@@ -25,6 +25,7 @@ import { client } from "@/lib/api/client";
 import { TaskPriority, TaskStatus, TaskDifficulty } from "@/types/type";
 import { authStore } from "@/stores/AuthStore";
 import { toast } from "react-toastify";
+import { getRankText } from "@/lib/getRankText";
 
 interface CreateTaskForm {
   title: string;
@@ -224,7 +225,7 @@ function CreateTaskPage() {
                   ) : users?.results.length > 0 ? (
                     users.results.map((user: any) => (
                       <MenuItem key={user.id} value={user.id}>
-                        {user.username} ({user.rank})
+                        {user.last_name}{user.first_name} ({getRankText(user.rank)})
                       </MenuItem>
                     ))
                   ) : (

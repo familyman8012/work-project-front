@@ -36,7 +36,7 @@ export default function TaskList({ tasks, page, onPageChange }: TaskListProps) {
     <Box>
       <Box sx={{ mb: 2 }}>
         {tasks.results.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard key={task.id} task={task} showDates={true} />
         ))}
       </Box>
 

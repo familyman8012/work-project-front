@@ -52,7 +52,7 @@ export default function TodayTasksCard() {
           관리 중인 오늘의 작업 ({tasks?.length || 0})
         </Typography>
         {tasks?.length > 0 ? (
-          tasks.map((task: any) => <TaskCard key={task.id} task={task} />)
+          tasks.map((task: any) => <TaskCard key={task.id} task={task} showDates={true} />)
         ) : (
           <Typography color="text.secondary">
             오늘 예정된 작업이 없습니다.
@@ -66,7 +66,7 @@ export default function TodayTasksCard() {
         </Typography>
         {delayedTasks?.length > 0 ? (
           delayedTasks.map((task: any) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} showDates={true} />
           ))
         ) : (
           <Typography color="text.secondary">
