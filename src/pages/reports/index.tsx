@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Box,
@@ -95,7 +95,18 @@ interface PersonalReport {
 
 function PersonalReportPage() {
   const router = useRouter();
-  const { id } = router.query; // URL에서 직원 ID 가져오기
+  const isExecutive = authStore.user?.rank === "DIRECTOR" || authStore.user?.rank === "GENERAL_MANAGER";
+  const isManager = authStore.user?.role === "MANAGER";
+  const isEmployee = !isExecutive && !isManager;
+
+  // 일반 직원인 경우 접근 제한
+  useEffect(() => {
+    if (isEmployee) {
+      toast.error("접근 권한이 없습니다.");
+      router.back();
+    }
+  }, [isEmployee, router]);
+
   const [startDate, setStartDate] = useState<Date | null>(
     new Date(new Date().setMonth(new Date().getMonth() - 1))
   );
@@ -103,13 +114,37 @@ function PersonalReportPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [currentTab, setCurrentTab] = useState(0);
 
-  // 직원 목록 조회
+  // 직원 목록 조회 - 권한에 따른 필터링
   const { data: users } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const response = await client.get("/api/users/");
-      return response.data;
+      try {
+        const params = new URLSearchParams();
+        
+        if (isManager) {
+          // 팀장인 경우 자신의 부서 직원만 조회
+          params.append("department", String(authStore.user?.department));
+        }
+        
+        // 본부장/이사인 경우 모든 직원 조회 가능
+        if (isExecutive && authStore.user?.department?.parent === null) {
+          // 본부 소속인 경우 하위 부서 포함
+          params.append("department", String(authStore.user?.department));
+          params.append("include_child_depts", "true");
+        } else if (isExecutive) {
+          // 팀 소속인 경우 해당 팀만
+          params.append("department", String(authStore.user?.department));
+        }
+
+        const response = await client.get(`/api/users/?${params.toString()}`);
+        console.log('Users response:', response.data); // 디버깅용
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
     },
+    enabled: !isEmployee && !!authStore.user?.department, // 일반 직원이 아니고, department 정보가 있을 때만 실행
   });
 
   // 개인 보고서 데이터 조회
@@ -117,13 +152,14 @@ function PersonalReportPage() {
     queryKey: ["personalReport", selectedUserId, startDate, endDate],
     queryFn: async () => {
       if (!startDate || !endDate) throw new Error("날짜를 선택해주세요");
+      if (isExecutive && !selectedUserId) return null; // 본부장/이사가 직원을 선택하지 않은 경우
 
       const params = new URLSearchParams({
         start_date: format(startDate, "yyyy-MM-dd"),
         end_date: format(endDate, "yyyy-MM-dd"),
       });
 
-      if (selectedUserId && selectedUserId !== String(authStore.user?.id)) {
+      if (selectedUserId) {
         params.append("employee_id", selectedUserId);
       }
 
@@ -134,13 +170,36 @@ function PersonalReportPage() {
         if (error.response?.status === 403) {
           toast.error("해당 직원의 보고서에 대한 접근 권한이 없습니다.");
         } else {
-          toast.error("보고서를 는 중 오류가 생다.");
+          toast.error("보고서를 불러오는 중 오류가 발생했습니다.");
         }
         throw error;
       }
     },
-    enabled: !!startDate && !!endDate,
+    enabled: !isEmployee && (!!startDate && !!endDate && (!isExecutive || !!selectedUserId)),
   });
+
+  // 본부장/이사용 가이드 컴포넌트
+  const ExecutiveGuide = () => (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        보고서 사용 안내
+      </Typography>
+      <Typography variant="body1" paragraph>
+        직원을 택하여 개인별 상세 보고서를 조회할 수 있습니다.
+      </Typography>
+      <Box sx={{ pl: 2 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          주요 기능
+        </Typography>
+        <Typography component="ul">
+          <li>직원별 작업 현황 및 성과 분석</li>
+          <li>시간 관리 효율성 검토</li>
+          <li>품질 지표 모니터링</li>
+          <li>팀/부서 평균과의 비교 분석</li>
+        </Typography>
+      </Box>
+    </Paper>
+  );
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
@@ -166,7 +225,6 @@ function PersonalReportPage() {
         {/* 필터 영역 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Grid container spacing={2} alignItems="center">
-            {/* 직원 선택 필터 추가 */}
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
                 <InputLabel>직원 선택</InputLabel>
@@ -175,10 +233,15 @@ function PersonalReportPage() {
                   label="직원 선택"
                   onChange={(e) => setSelectedUserId(e.target.value as string)}
                 >
-                  <MenuItem value="">내 보고서</MenuItem>
-                  {users?.results.map((user: any) => (
-                    // 자신은 제외하고 표시
-                    user.id !== authStore.user?.id && (
+                  {isExecutive ? (
+                    <MenuItem value="">직원을 선택하세요</MenuItem>
+                  ) : (
+                    <MenuItem value="">내 보고서</MenuItem>
+                  )}
+                  {users?.results?.map((user: any) => (
+                    // 이사와 본부장을 제외한 직원만 표시
+                    user.rank !== "DIRECTOR" && 
+                    user.rank !== "GENERAL_MANAGER" && (
                       <MenuItem key={user.id} value={user.id}>
                         {user.department_name} - {user.last_name}{user.first_name} ({getRankText(user.rank)})
                       </MenuItem>
@@ -187,8 +250,6 @@ function PersonalReportPage() {
                 </Select>
               </FormControl>
             </Grid>
-
-            {/* 기존 날짜 선택 필터 */}
             <Grid item xs={12} md={4}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
                 <DatePicker
@@ -216,45 +277,51 @@ function PersonalReportPage() {
           </Grid>
         </Paper>
 
-        {report ? (
-          <>
-            {/* 탭 메뉴 */}
-            <Paper sx={{ mb: 3 }}>
-              <Tabs 
-                value={currentTab} 
-                onChange={handleTabChange}
-                variant="scrollable"
-                scrollButtons="auto"
-              >
-                <Tab label="기본 통계" />
-                <Tab label="시간 관리" />
-                <Tab label="품질 지표" />
-                <Tab label="작업 분포" />
-                <Tab label="비교 분석" />
-              </Tabs>
-            </Paper>
-
-            {/* 탭 컨텐츠 */}
-            {currentTab === 0 && (
-              <BasicStats stats={report.basic_stats} />
-            )}
-            {currentTab === 1 && (
-              <TimeStats stats={report.time_stats} />
-            )}
-            {currentTab === 2 && (
-              <QualityStats stats={report.quality_stats} />
-            )}
-            {currentTab === 3 && (
-              <DistributionStats stats={report.distribution_stats} />
-            )}
-            {currentTab === 4 && (
-              <ComparisonStats stats={report.comparison_stats} />
-            )}
-          </>
+        {/* 본부장/이사이고 직원 미선택시 가이드 표시 */}
+        {isExecutive && !selectedUserId ? (
+          <ExecutiveGuide />
         ) : (
-          <Alert severity="info">
-            날짜를 선택하여 보고서를 조회해주세요.
-          </Alert>
+          // 보고서 내용
+          report ? (
+            <>
+              {/* 탭 메뉴 */}
+              <Paper sx={{ mb: 3 }}>
+                <Tabs 
+                  value={currentTab} 
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
+                  <Tab label="기본 통계" />
+                  <Tab label="시간 관리" />
+                  <Tab label="품질 지표" />
+                  <Tab label="작업 분포" />
+                  <Tab label="비교 분석" />
+                </Tabs>
+              </Paper>
+
+              {/* 탭 컨텐츠 */}
+              {currentTab === 0 && (
+                <BasicStats stats={report.basic_stats} />
+              )}
+              {currentTab === 1 && (
+                <TimeStats stats={report.time_stats} />
+              )}
+              {currentTab === 2 && (
+                <QualityStats stats={report.quality_stats} />
+              )}
+              {currentTab === 3 && (
+                <DistributionStats stats={report.distribution_stats} />
+              )}
+              {currentTab === 4 && (
+                <ComparisonStats stats={report.comparison_stats} />
+              )}
+            </>
+          ) : (
+            <Alert severity="info">
+              날짜를 선택하여 보고서를 조회해주세요.
+            </Alert>
+          )
         )}
       </Box>
     </Layout>
@@ -282,7 +349,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
               작업 현황 안내
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-              {`현재 배정된 작업이 없습니다. 이는 다음과 같은 상황일 수 있습니다:
+              {`현재 배정된 작업이 없습니. 이는 다음과 같은 상황일 수 있습니다:
 
               • 신규 프로젝트 착수 준비 단계
               • 이전 작업들의 완료 후 과도기적 시점
@@ -351,7 +418,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
       ${format(new Date(), 'yyyy년 MM월')} 업무 실적 보고서
 
       1. 업무 현황 개요
-      현재 총 ${stats.total_tasks}건의 업무를 담당하고 있으며, 이 중 ${stats.completed_tasks}건(${completionRate.toFixed(1)}%)을 성공적으로 완료하였습니다. 
+      현재 총 ${stats.total_tasks}건 업무를 담당하고 있으며, 이 중 ${stats.completed_tasks}건(${completionRate.toFixed(1)}%)을 성공적으로 완료하였습니다. 
       진행 중인 업무는 ${stats.in_progress_tasks}건(${inProgressRate.toFixed(1)}%)이며, 
       ${stats.delayed_tasks}건의 지연 업무가 발생하 전체 지연율은 ${delayRate.toFixed(1)}%를 기록하고 있습니다.
 
@@ -380,7 +447,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
     }
 
     if (delayRate <= 5) {
-      insight += "일정 준수율이 매우 우수합니다. 이는 체계적인 시간 관리와 업무 우선순위 설정 능력이 뛰어남을 보여줍니다.";
+      insight += "일정 준수율이 매우 우수합니다. 이는 체계적인 시간 관리와 업무 우선순위 설정 능력이 뛰어남을 보여니다.";
     } else if (delayRate <= 15) {
       insight += "일정 관리는 대체로 양호하나, 보다 철저한 일정 관리가 요구됩니다.";
     } else {
@@ -729,7 +796,7 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
               "일부 작업에서 시간 추정 정확도 향상 필요",
               "업무 프로세스 최적화 여지 존재"
             ] : [
-              "작업 시간 추정의 정확도 개선 필요",
+              "작업 시간 추정의 정확도 선 필요",
               "업무 처리 효율성 저하 우려",
               "시간 관리 체계 재정립 검토 필요"
             ].map((item, index) => (
@@ -795,7 +862,7 @@ const getImprovementSuggestions = (efficiency: number) => {
   } else {
     return [
       "작업 시간 추정 방식 전면 재검토",
-      "업무 프로세스 병목 구간 분석",
+      "업무 프로세 병목 구간 분석",
       "시간 관리 교육 프로그램 참여 검토",
       "멘토링 또는 코칭 지원 요청"
     ];
@@ -815,7 +882,7 @@ function QualityStats({ stats }: { stats: PersonalReport["quality_stats"] }) {
               품질 평가 데이터 없음
             </Typography>
             <Typography variant="body1">
-              현재 기간 동안의 품질 평가 데이터가 없습니다.
+              현 기간 동안의 품질 평가 데이터가 없습니다.
               작업이 완료되고 평가가 이루어지면 품질 지표가 자동으로 생성됩니다.
             </Typography>
           </Paper>
@@ -1359,7 +1426,7 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     
     if (!isPerformingBetterThanTeam()) {
       suggestions.push(
-        "팀 내 우수 수행자와의 협업 및 노하우 공유 활성화",
+        "팀 내 우수 수행자의 협업 및 노하우 공유 활성화",
         "작업 수행 프로세스 개선을 위한 팀 내 피드백 수렴"
       );
     }
@@ -1373,7 +1440,7 @@ function ComparisonStats({ stats }: { stats: NonNullable<PersonalReport["compari
     
     if (suggestions.length === 0) {
       suggestions.push(
-        "현재의 우수한 성과를 유지하기 위한 지속적인 자기 개발",
+        "현재의 우수한 성과를 유지하�� 위한 지속적인 자�� 개발",
         "팀/부서 내 멘토링 활동을 통한 조직 전체 역량 향상 기여"
       );
     }
