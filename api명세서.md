@@ -1,5 +1,7 @@
 # 📚 상세 API 명세서
 
+python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); user = User.objects.get(username='tech_head'); user.set_password('test123!'); user.save()"
+
 python -m venv venv
 
 username="testuser",

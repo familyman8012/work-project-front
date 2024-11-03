@@ -10,6 +10,7 @@ import {
   MenuItem,
   Divider,
   ListItemIcon,
+  Link,
 } from "@mui/material";
 import { Notifications, Logout, Settings, Person } from "@mui/icons-material";
 import { observer } from "mobx-react";
@@ -80,6 +81,7 @@ const Header = observer(() => {
       }}
     >
       <Toolbar>
+   
         <Typography 
           variant="h6" 
           component="div" 
@@ -91,7 +93,7 @@ const Header = observer(() => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Govis Task Management
+              <Link href="/" style={{ textDecoration: "none", color: "inherit" }}> Govis Task Management</Link>
         </Typography>
 
         {authStore.isAuthenticated && (

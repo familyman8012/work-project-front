@@ -158,7 +158,7 @@ const TaskFilters = ({
         {/* 검색창 수정 */}
         <TextField
           size="small"
-          placeholder="작업명 또는 담당자 이름으로 검색 후 엔터"
+          placeholder={`작업명 ${!hideFilters.includes("department") ? "또는 담당자 이름으로" : ""} 검색 후 엔터`}
           value={searchInput}
           onChange={handleSearchInputChange}
           onKeyPress={handleKeyPress}
