@@ -74,8 +74,11 @@ function EditTaskPage() {
         const params = new URLSearchParams();
         if (form?.department) {
           params.append("department", String(form.department));
+          params.append("include_child_depts", "false"); // 명시적으로 하위부서 제외
+          console.log("Fetching users with params:", params.toString()); // 디버깅용
         }
         const response = await client.get(`/api/users/?${params.toString()}`);
+        console.log("Users API Response:", response.data); // 디버깅용
         return response.data;
       } catch (error) {
         console.error("Users API Error:", error);
@@ -238,12 +241,13 @@ function EditTaskPage() {
                   onChange={(e) =>
                     handleDepartmentChange(e.target.value as number)
                   }
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { maxHeight: 400 }
+                    }
+                  }}
                 >
-                  {departments.map((dept: any) => (
-                    <MenuItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </MenuItem>
-                  ))}
+                  {renderDepartmentOptions(departments)}
                 </Select>
               </FormControl>
             </Grid>

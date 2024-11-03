@@ -18,7 +18,7 @@ export default function Layout({ children }: LayoutProps) {
           sx={{
             flexGrow: 1,
             p: 3,
-            mt: "64px", // AppBar 높이만큼 여백
+            
             minHeight: "100vh",
           }}
         >
