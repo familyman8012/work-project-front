@@ -169,8 +169,10 @@ function PersonalReportPage() {
     enabled: isExecutive, // 본부장/이사인 경우만 부서 목록 조회
   });
 
-  // 선택된 부서 state 추가
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  // 선택된 부서 state 초기값을 사용자의 부서 ID로 설정
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(
+    isExecutive ? String(authStore.user?.department) : ""
+  );
 
   // 직원 목록 조회 - 권한에 따른 필터링
   const { data: users } = useQuery({
@@ -390,7 +392,14 @@ function PersonalReportPage() {
             </Paper>
 
             {/* 탭 컨텐츠 */}
-            {currentTab === 0 && <BasicStats stats={report.basic_stats} />}
+            {currentTab === 0 && (
+              <BasicStats
+                stats={report.basic_stats}
+                users={users}
+                selectedUserId={selectedUserId}
+                qualityStats={report.quality_stats}
+              />
+            )}
             {currentTab === 1 && <TimeStats stats={report.time_stats} />}
             {currentTab === 2 && <QualityStats stats={report.quality_stats} />}
             {currentTab === 3 && (
@@ -411,7 +420,17 @@ function PersonalReportPage() {
 }
 
 // 기본 통계 컴포넌트
-function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
+function BasicStats({
+  stats,
+  users,
+  selectedUserId,
+  qualityStats,
+}: {
+  stats: PersonalReport["basic_stats"];
+  users?: any;
+  selectedUserId?: string;
+  qualityStats: PersonalReport["quality_stats"];
+}) {
   if (stats.total_tasks === 0) {
     return (
       <Grid container spacing={3}>
@@ -482,7 +501,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
 
         2) 업무 프로세스 개선
            - 기존 업무 수행 방식 분석 및 개선점 도출
-           - 업무 매뉴얼 및 가이드라인 정비
+           - 업무 매뉴얼 및 가이라인 정비
            - 업무 자동화 방안 연구
 
         3) 향후 준비사항
@@ -502,19 +521,36 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
       ? (stats.in_progress_tasks / stats.total_tasks) * 100
       : 0;
 
+    // 선택된 직원 정보 가져오기
+    const selectedUser = users?.results?.find(
+      (user: any) => user.id === Number(selectedUserId)
+    );
+    const userName = selectedUser
+      ? `${selectedUser.last_name}${selectedUser.first_name}`
+      : `${authStore.user?.last_name}${authStore.user?.first_name}`;
+    const userRank = selectedUser
+      ? getRankText(selectedUser.rank)
+      : getRankText(String(authStore.user?.rank));
+
+    // 평가 점수 (stats에서 가져오거나 기본값 사용)
+    const avgScore = qualityStats?.average_score || 0;
+
     return `
       ${format(new Date(), "yyyy년 MM월")} 업무 실적 보고서
 
       1. 업무 현황 개요
+      ${userName} ${userRank}님은 현재 평가점수 ${avgScore.toFixed(
+      1
+    )}점으로 평가를 받고 있습니다.
       현재 총 ${stats.total_tasks}건 업무를 담당하고 있으며, 이 중 ${
       stats.completed_tasks
     }건(${completionRate.toFixed(1)}%)을 성공적으로 완료하였습니다. 
       진행 중인 업무는 ${stats.in_progress_tasks}건(${inProgressRate.toFixed(
       1
-    )}%)이며, 
+    )}%이며, 
       ${
         stats.delayed_tasks
-      }건의 지연 업무가 발생하 전체 지연율은 ${delayRate.toFixed(
+      }건의 지연 업무가 발생하여 전체 지연율은 ${delayRate.toFixed(
       1
     )}%를 기록하고 있습니다.
 
@@ -549,7 +585,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
       insight +=
         "일정 관리는 대체로 양호하나, 보다 철저한 일정 관리가 요구됩니다.";
     } else {
-      insight += "일정 준수율 개선을 위한 체계적인 접근이 요한 상황입니다.";
+      insight += "일정 준수율 개선을 위한 체계적인 접근이 요한 황입니다.";
     }
 
     return insight;
@@ -705,7 +741,7 @@ function BasicStats({ stats }: { stats: PersonalReport["basic_stats"] }) {
       [중장기 발전과제]
       1. 업무 수행 역량 고도화
          - 전문 강화를 위 교육 프로그램 참여
-         - 업무 관련 자증 취득 및 스킬 향상
+         - 업무 관련 자증 취�� 및 스킬 향상
       
       2. 프로젝트 관리 능력 배양
          - 복잡한 다중 작업 관리 능력 향상
@@ -818,7 +854,7 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
             </Typography>
             <Typography variant="body1">
               현재 기간 동안의 작업 시간 기록이 없습니다. 작업이 시작되면 시간
-              관리 통계가 자동으로 생성됩니다.
+              관리 통계가 자동으로 생성��니다.
             </Typography>
           </Paper>
         </Grid>
@@ -907,7 +943,7 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
               : stats.estimated_vs_actual <= 120
               ? [
                   "대체로 적절한 시간 관리 수행",
-                  "일부 작업에서 ��간 추정 정확도 향상 필요",
+                  "일부 작업에서 간 추정 정확도 향상 필요",
                   "업무 프로세스 최적화 여지 존재",
                 ]
               : [
@@ -1207,7 +1243,7 @@ function DistributionStats({
               ? "기술적 도전이 많 상황입니다. 추가 지원이나 교육이 필요할 수 있습니다."
               : hardTasks > 20
               ? "적절한 수준의 기술적 도전을 유지하고 있습니다."
-              : "비교적 안정적인 난이도로 ���무가 구성되어 있습니다."
+              : "비교적 안정적인 난이도로 무가 구성되어 있습니다."
           }`}
         </Typography>
 
@@ -1219,7 +1255,7 @@ function DistributionStats({
             1
           )}%를 차지하고 있어, ${
             inProgressTasks > 60
-              ? "동시 진행 작업이 많아 업무 집중도가 저하될 수 있습니다."
+              ? "동시 진행 작업이 많아 업무 집중도가 저하될 있습니다."
               : inProgressTasks > 30
               ? "적정한 수준의 작업을 진행하고 있습니다."
               : "추가 작업 수용이 가능한 상태입니다."
@@ -1457,8 +1493,8 @@ function ComparisonStats({ stats }: { stats: ComparisonStats }) {
               비교 분석 데이터 없음
             </Typography>
             <Typography variant="body1">
-              현재 기간 동안의 비교 분석 데이터가 없습니다. 작업이 완료되고
-              평가가 이루어지면 팀 및 부서와의 비교 분석이 자동으로 생성됩니다.
+              현재 기간 동안의 비교 분석 데이터 없습니다. 작업이 완료되고 평가가
+              이루어지면 팀 및 부서와의 비교 분석이 자동으로 생성됩니다.
             </Typography>
           </Paper>
         </Grid>

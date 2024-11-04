@@ -55,10 +55,10 @@ const TaskFilters = ({
 
   // 엔터키 처리
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       // 검색어가 있을 경우 부서 필터를 초기화
       if (searchInput.trim()) {
-        onFilterChange("department", "");  // 부서 필터를 모든 부서로 설정
+        onFilterChange("department", ""); // 부서 필터를 모든 부서로 설정
       }
       onSearchChange(searchInput);
     }
@@ -73,8 +73,8 @@ const TaskFilters = ({
   const handleDepartmentChange = (e: any) => {
     // 부서가 선택되면 검색어 초기화
     if (e.target.value !== "") {
-      setSearchInput("");  // 검색어 입력창 초기화
-      onSearchChange("");  // 검색 필터 초기화
+      setSearchInput(""); // 검색어 입력창 초기화
+      onSearchChange(""); // 검색 필터 초기화
     }
     onFilterChange("department", e.target.value);
   };
@@ -82,16 +82,16 @@ const TaskFilters = ({
   // 부서 계층 구조 생성
   const organizeHierarchy = (depts: Department[]) => {
     // 본부들 (parent가 null인 부서들)
-    const headquarters = depts.filter(dept => dept.parent === null);
-    
+    const headquarters = depts.filter((dept) => dept.parent === null);
+
     // 각 본부의 하위 팀들 찾기
     const getTeams = (hqId: number) => {
-      return depts.filter(dept => dept.parent === hqId);
+      return depts.filter((dept) => dept.parent === hqId);
     };
 
-    return headquarters.map(hq => ({
+    return headquarters.map((hq) => ({
       ...hq,
-      teams: getTeams(hq.id)
+      teams: getTeams(hq.id),
     }));
   };
 
@@ -100,23 +100,29 @@ const TaskFilters = ({
   // 부서 옵션 렌더링
   const renderDepartmentOptions = () => {
     const options: JSX.Element[] = [
-      <MenuItem key="all" value="">모든 부서</MenuItem>
+      <MenuItem key="all" value="">
+        모든 부서
+      </MenuItem>,
     ];
 
-    hierarchicalDepts.forEach(hq => {
+    hierarchicalDepts.forEach((hq) => {
       // 본부 레벨 (구분선으로 강조)
       options.push(
-        <MenuItem 
-          key={hq.id} 
+        <MenuItem
+          key={hq.id}
           value={hq.id}
           sx={{
-            fontWeight: 'bold',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: hq.id === currentUserDepartment ? 'action.selected' : 'inherit',
-            '&:hover': {
-              backgroundColor: hq.id === currentUserDepartment ? 'action.selected' : 'action.hover'
-            }
+            fontWeight: "bold",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            backgroundColor:
+              hq.id === currentUserDepartment ? "action.selected" : "inherit",
+            "&:hover": {
+              backgroundColor:
+                hq.id === currentUserDepartment
+                  ? "action.selected"
+                  : "action.hover",
+            },
           }}
         >
           📂 {hq.name}
@@ -124,17 +130,23 @@ const TaskFilters = ({
       );
 
       // 해당 본부의 하위 팀들
-      hq.teams?.forEach(team => {
+      hq.teams?.forEach((team) => {
         options.push(
-          <MenuItem 
-            key={team.id} 
+          <MenuItem
+            key={team.id}
             value={team.id}
             sx={{
               pl: 4,
-              backgroundColor: team.id === currentUserDepartment ? 'action.selected' : 'inherit',
-              '&:hover': {
-                backgroundColor: team.id === currentUserDepartment ? 'action.selected' : 'action.hover'
-              }
+              backgroundColor:
+                team.id === currentUserDepartment
+                  ? "action.selected"
+                  : "inherit",
+              "&:hover": {
+                backgroundColor:
+                  team.id === currentUserDepartment
+                    ? "action.selected"
+                    : "action.hover",
+              },
             }}
           >
             └ {team.name}
@@ -158,7 +170,9 @@ const TaskFilters = ({
         {/* 검색창 수정 */}
         <TextField
           size="small"
-          placeholder={`작업명 ${!hideFilters.includes("department") ? "또는 담당자 이름으로" : ""} 검색 후 엔터`}
+          placeholder={`작업명 ${
+            !hideFilters.includes("department") ? "또는 담당자 이름으로" : ""
+          } 검색 후 엔터`}
           value={searchInput}
           onChange={handleSearchInputChange}
           onKeyPress={handleKeyPress}
@@ -217,17 +231,19 @@ const TaskFilters = ({
               MenuProps={{
                 PaperProps: {
                   sx: {
-                    maxHeight: 400
-                  }
-                }
+                    maxHeight: 400,
+                  },
+                },
               }}
             >
               {renderDepartmentOptions()}
             </Select>
           </FormControl>
         )}
-        </Box>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", marginTop: "20px" }}>
+      </Box>
+      <Box
+        sx={{ display: "flex", gap: 2, flexWrap: "wrap", marginTop: "20px" }}
+      >
         {/* 날짜 범위 필터 */}
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
           <DatePicker
@@ -243,7 +259,7 @@ const TaskFilters = ({
             slotProps={{ textField: { size: "small" } }}
           />
         </LocalizationProvider>
-        {/* 필��� 초기화 버튼 */}
+        {/* 필 초기화 버튼 */}
         <IconButton onClick={handleClearFilters} size="small">
           <Clear />
         </IconButton>
