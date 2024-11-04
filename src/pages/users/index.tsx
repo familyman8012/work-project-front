@@ -110,7 +110,7 @@ function UsersPage() {
       // 본부 추가
       options.push(
         <MenuItem key={mainDept.id} value={mainDept.id.toString()}>
-          {mainDept.name}
+          📂 {mainDept.name}
         </MenuItem>
       );
 
