@@ -37,40 +37,46 @@ const Sidebar = observer(() => {
   // 권한에 따른 메뉴 필터링
   const getFilteredMenuItems = () => {
     const menuSection = [
-      { 
+      {
         title: "메뉴",
         items: [
           { text: "대시보드", icon: <Dashboard />, path: "/" },
           { text: "내 작업", icon: <AssignmentTurnedIn />, path: "/my-tasks" },
           { text: "일정", icon: <Assignment />, path: "/tasks" },
           { text: "알림", icon: <Notifications />, path: "/notifications" },
-        ]
-      }
+        ],
+      },
     ];
 
     const managementSection = {
       title: "관리",
       items: [
-        { text: "직원 관리", icon: <People />, path: "/users" },      
+        { text: "직원 관리", icon: <People />, path: "/users" },
         { text: "작업 평가", icon: <GradeRounded />, path: "/evaluations" },
-        { text: "통계", icon: <Assessment />, path: "/reports" },
-      ]
+        { text: "심층리포트", icon: <Assessment />, path: "/reports" },
+      ],
     };
 
     const adminSection = {
       title: "시스템 관리",
       items: [
-        { text: "부서/팀 관리", icon: <Business />, path: "/departments/manage" },     
+        {
+          text: "부서/팀 관리",
+          icon: <Business />,
+          path: "/departments/manage",
+        },
         { text: "직원 등록", icon: <People />, path: "/users/manage" },
-      ]
+      ],
     };
 
     const sections = [...menuSection];
 
     if (user?.role === "ADMIN" || user?.rank === "DIRECTOR") {
       sections.push(managementSection, adminSection);
-    } else if (user?.rank === "GENERAL_MANAGER" || 
-        (user?.role === "MANAGER" && user?.rank !== "STAFF")) {
+    } else if (
+      user?.rank === "GENERAL_MANAGER" ||
+      (user?.role === "MANAGER" && user?.rank !== "STAFF")
+    ) {
       sections.push(managementSection);
     }
 
@@ -102,7 +108,8 @@ const Sidebar = observer(() => {
             </Avatar>
             <Box>
               <Typography variant="h6">
-              {user?.last_name}{user?.first_name} 
+                {user?.last_name}
+                {user?.first_name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {getRankText(String(user?.rank))}
@@ -114,7 +121,7 @@ const Sidebar = observer(() => {
           </Box>
         </Box>
         <Divider />
-        
+
         {sections.map((section, index) => (
           <Box key={section.title} sx={{ mt: index !== 0 ? 2 : 0 }}>
             <Typography
@@ -122,11 +129,11 @@ const Sidebar = observer(() => {
               sx={{
                 px: 3,
                 py: 1.5,
-                display: 'block',
-                color: 'text.secondary',
+                display: "block",
+                color: "text.secondary",
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
               }}
             >
               {section.title}
@@ -149,7 +156,8 @@ const Sidebar = observer(() => {
                           mx: 1,
                           borderRadius: 1,
                           "&.Mui-selected": {
-                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.9),
+                            backgroundColor: (theme) =>
+                              alpha(theme.palette.primary.main, 0.9),
                             color: "white",
                             "&:hover": {
                               backgroundColor: "primary.main",
@@ -159,8 +167,9 @@ const Sidebar = observer(() => {
                             },
                           },
                           "&:hover": {
-                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                          }
+                            backgroundColor: (theme) =>
+                              alpha(theme.palette.primary.main, 0.1),
+                          },
                         }}
                       >
                         <ListItemIcon

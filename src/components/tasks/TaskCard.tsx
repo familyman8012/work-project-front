@@ -19,6 +19,11 @@ import {
 import { useRouter } from "next/router";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import {
+  getTaskStatusText,
+  getTaskPriorityText,
+  getTaskDifficultyText,
+} from "@/lib/getTaskStatusText";
 
 interface TaskCardProps {
   task: any;
@@ -47,7 +52,11 @@ const getPriorityColor = (priority: string) => {
   return colors[priority as keyof typeof colors] || "#9e9e9e";
 };
 
-export default function TaskCard({ task, showDates, showScore }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  showDates,
+  showScore,
+}: TaskCardProps) {
   const router = useRouter();
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "M월 d일", { locale: ko });
@@ -75,17 +84,17 @@ export default function TaskCard({ task, showDates, showScore }: TaskCardProps) 
             <Typography variant="h6" component="div">
               {task.title}
             </Typography>
-            <Typography 
-              variant="body2" 
+            <Typography
+              variant="body2"
               color="text.secondary"
-              sx={{ 
-                display: "flex", 
+              sx={{
+                display: "flex",
                 alignItems: "center",
                 gap: 0.5,
                 ml: 2,
                 backgroundColor: "action.hover",
                 padding: "4px 8px",
-                borderRadius: "4px"
+                borderRadius: "4px",
               }}
             >
               <Person fontSize="small" />
@@ -94,7 +103,7 @@ export default function TaskCard({ task, showDates, showScore }: TaskCardProps) 
           </Box>
           <Chip
             icon={<PriorityHigh />}
-            label={task.priority}
+            label={getTaskPriorityText(task.priority)}
             size="small"
             sx={{
               backgroundColor: getPriorityColor(task.priority),
@@ -106,7 +115,7 @@ export default function TaskCard({ task, showDates, showScore }: TaskCardProps) 
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           <Chip
             icon={<Flag />}
-            label={task.status}
+            label={getTaskStatusText(task.status)}
             size="small"
             sx={{
               backgroundColor: getStatusColor(task.status),
@@ -120,31 +129,34 @@ export default function TaskCard({ task, showDates, showScore }: TaskCardProps) 
           {showDates && (
             <Grid item xs={12} sm={12}>
               <Typography variant="body2" color="text.secondary">
-                {format(new Date(task.start_date), 'yyyy-MM-dd')} ~ 
-                {task.completed_at 
-                  ? format(new Date(task.completed_at), 'yyyy-MM-dd')
-                  : format(new Date(task.due_date), 'yyyy-MM-dd')}
+                {format(new Date(task.start_date), "yyyy-MM-dd")} ~
+                {task.completed_at
+                  ? format(new Date(task.completed_at), "yyyy-MM-dd")
+                  : format(new Date(task.due_date), "yyyy-MM-dd")}
               </Typography>
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
             <Typography variant="body2" color="text.secondary">
-              예상 시간: {task.estimated_hours}시간    {task.actual_hours && (` / 실제 시간: ${task.actual_hours}시간`)}
-                {showScore && task.evaluation && (
-                  <Chip
-                    size="small"
-                    label={`${task.evaluation.performance_score}점`}
-                    color={task.evaluation.performance_score >= 4 ? "success" : "default"}
-                    sx={{ ml: 1 }}
-                  />
-                )}
+              예상 시간: {task.estimated_hours}시간{" "}
+              {task.actual_hours && ` / 실제 시간: ${task.actual_hours}시간`}
+              {showScore && task.evaluation && (
+                <Chip
+                  size="small"
+                  label={`${task.evaluation.performance_score}점`}
+                  color={
+                    task.evaluation.performance_score >= 4
+                      ? "success"
+                      : "default"
+                  }
+                  sx={{ ml: 1 }}
+                />
+              )}
             </Typography>
           </Grid>
           {task.actual_hours && (
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">
-              
-              </Typography>
+              <Typography variant="body2" color="text.secondary"></Typography>
             </Grid>
           )}
         </Grid>

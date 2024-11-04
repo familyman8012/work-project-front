@@ -100,7 +100,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const theme = useTheme();
-  
+
   const {
     register,
     handleSubmit,
@@ -141,20 +141,20 @@ export default function LoginPage() {
               alignItems: "center",
             }}
           >
-            <LogoText variant="h1">
-             Govis Task Management
-            </LogoText>
+            <LogoText variant="h1">Govis Task Management</LogoText>
             {error && (
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: 2, 
+              <Alert
+                severity="error"
+                sx={{
+                  mb: 2,
                   width: "100%",
                   borderRadius: "12px",
                   animation: "shake 0.5s ease-in-out",
                   "@keyframes shake": {
                     "0%, 100%": { transform: "translateX(0)" },
-                    "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
+                    "10%, 30%, 50%, 70%, 90%": {
+                      transform: "translateX(-2px)",
+                    },
                     "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
                   },
                 }}

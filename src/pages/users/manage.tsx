@@ -34,12 +34,14 @@ function UserManagePage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   // 권한 체크
-  const canManageUsers = authStore.user?.role === "ADMIN" || 
-                        authStore.user?.rank === "DIRECTOR" ||
-                        authStore.user?.rank === "GENERAL_MANAGER";
+  const canManageUsers =
+    authStore.user?.role === "ADMIN" ||
+    authStore.user?.rank === "DIRECTOR" ||
+    authStore.user?.rank === "GENERAL_MANAGER";
 
   // 직원 목록 조회
   const { data: usersData, isLoading } = useQuery({
@@ -51,7 +53,7 @@ function UserManagePage() {
       });
 
       if (searchTerm) {
-        params.append('search', searchTerm);
+        params.append("search", searchTerm);
       }
 
       const response = await client.get(`/api/users/?${params.toString()}`);
@@ -64,7 +66,10 @@ function UserManagePage() {
     mutationFn: async (userData: any) => {
       if (selectedUser) {
         // 수정
-        const response = await client.patch(`/api/users/${selectedUser.id}/`, userData);
+        const response = await client.patch(
+          `/api/users/${selectedUser.id}/`,
+          userData
+        );
         return response.data;
       } else {
         // 등록
@@ -76,7 +81,9 @@ function UserManagePage() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setOpenForm(false);
       setSelectedUser(null);
-      toast.success(selectedUser ? "직원 정보가 수정되었습니다." : "직원이 등록되었습니다.");
+      toast.success(
+        selectedUser ? "직원 정보가 수정되었습니다." : "직원이 등록되었습니다."
+      );
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.detail || "오류가 발생했습니다.");
@@ -94,7 +101,9 @@ function UserManagePage() {
       toast.success("직원이 삭제되었습니다.");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.detail || "삭제 중 오류가 발생했습니다.");
+      toast.error(
+        error.response?.data?.detail || "삭제 중 오류가 발생했습니다."
+      );
     },
   });
 
@@ -102,7 +111,9 @@ function UserManagePage() {
     setPage(newPage);
   };
 
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRowsPerPageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -121,19 +132,31 @@ function UserManagePage() {
     userMutation.mutate(data);
   };
 
-  // 검색어 핸들러
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-    setPage(0); // 검색 시 첫 페이지로 이동
+  // 검색어 입력 핸들러
+  const handleSearchInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setSearchInput(event.target.value);
+  };
+
+  // 검색 실행 핸들러
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+    setPage(0);
+  };
+
+  // 엔터 키 핸들러
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   if (!canManageUsers) {
     return (
       <Layout>
         <Box p={3}>
-          <Alert severity="error">
-            직원 관리 권한이 없습니다.
-          </Alert>
+          <Alert severity="error">직원 관리 권한이 없습니다.</Alert>
         </Box>
       </Layout>
     );
@@ -142,10 +165,15 @@ function UserManagePage() {
   return (
     <Layout>
       <Box p={3}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Typography variant="h5">직원 관리</Typography>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={() => {
               setSelectedUser(null);
               setOpenForm(true);
@@ -157,19 +185,29 @@ function UserManagePage() {
 
         {/* 검색 필터 추가 */}
         <Box mb={3}>
-          <TextField
-            fullWidth
-            placeholder="직원 이름으로 검색..."
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Box display="flex" gap={1}>
+            <TextField
+              fullWidth
+              placeholder="이름(성/이름), 사번, 이메일로 검색..."
+              value={searchInput}
+              onChange={handleSearchInputChange}
+              onKeyPress={handleKeyPress}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleSearch}
+              sx={{ minWidth: "80px" }}
+            >
+              검색
+            </Button>
+          </Box>
         </Box>
 
         <TableContainer component={Paper}>
@@ -188,17 +226,20 @@ function UserManagePage() {
               {usersData?.results.map((user: any) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.employee_id}</TableCell>
-                  <TableCell>{user.last_name}{user.first_name}</TableCell>
+                  <TableCell>
+                    {user.last_name}
+                    {user.first_name}
+                  </TableCell>
                   <TableCell>{user.department_name}</TableCell>
                   <TableCell>{getRankText(user.rank)}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                 
+
                   <TableCell align="center">
                     <IconButton onClick={() => handleEdit(user)} size="small">
                       <Edit />
                     </IconButton>
-                    <IconButton 
-                      onClick={() => handleDelete(user)} 
+                    <IconButton
+                      onClick={() => handleDelete(user)}
                       size="small"
                       color="error"
                     >
@@ -240,17 +281,15 @@ function UserManagePage() {
             <Typography variant="h6" gutterBottom>
               직원 삭제
             </Typography>
-            <Typography>
-              정말 이 직원을 삭제하시겠습니까?
-            </Typography>
+            <Typography>정말 이 직원을 삭제하시겠습니까?</Typography>
             <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-              <Button onClick={() => setOpenDeleteDialog(false)}>
-                취소
-              </Button>
+              <Button onClick={() => setOpenDeleteDialog(false)}>취소</Button>
               <Button
                 variant="contained"
                 color="error"
-                onClick={() => selectedUser && deleteMutation.mutate(selectedUser.id)}
+                onClick={() =>
+                  selectedUser && deleteMutation.mutate(selectedUser.id)
+                }
               >
                 삭제
               </Button>
@@ -262,4 +301,4 @@ function UserManagePage() {
   );
 }
 
-export default withAuth(UserManagePage); 
+export default withAuth(UserManagePage);

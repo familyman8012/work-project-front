@@ -20,6 +20,7 @@ import {
   TablePagination,
   CircularProgress,
   InputAdornment,
+  Button,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { withAuth } from "@/components/auth/withAuth";
@@ -54,12 +55,14 @@ function UsersPage() {
   const user = authStore.user;
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchInput, setSearchInput] = useState("");
 
   // 초기 필터 상태 설정
   const [filters, setFilters] = useState<Filters>(() => ({
-    department: user && (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER")
-      ? user.department.toString()
-      : "",
+    department:
+      user && (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER")
+        ? user.department.toString()
+        : "",
     rank: "",
     search: "",
   }));
@@ -79,9 +82,9 @@ function UsersPage() {
       params.append("page", String(page + 1));
       params.append("page_size", String(rowsPerPage));
 
-      console.log("API Request params:", params.toString());  // 디버깅용
+      console.log("API Request params:", params.toString()); // 디버깅용
       const response = await client.get(`/api/users/?${params.toString()}`);
-      console.log("API Response:", response.data);  // 디버깅용
+      console.log("API Response:", response.data); // 디버깅용
       return response.data;
     },
   });
@@ -98,11 +101,11 @@ function UsersPage() {
   // 부서 선택 옵션 구성
   const getDepartmentOptions = () => {
     if (!departments) return [];
-    
+
     // 본부와 팀을 구분하여 표시
     const mainDepts = departments.filter((d: any) => d.parent === null);
     const options: JSX.Element[] = [];
-    
+
     mainDepts.forEach((mainDept: any) => {
       // 본부 추가
       options.push(
@@ -110,9 +113,11 @@ function UsersPage() {
           {mainDept.name}
         </MenuItem>
       );
-      
+
       // 산하 팀 추가 (들여쓰기로 구분)
-      const childDepts = departments.filter((d: any) => d.parent === mainDept.id);
+      const childDepts = departments.filter(
+        (d: any) => d.parent === mainDept.id
+      );
       childDepts.forEach((childDept: any) => {
         options.push(
           <MenuItem key={childDept.id} value={childDept.id.toString()}>
@@ -121,7 +126,7 @@ function UsersPage() {
         );
       });
     });
-    
+
     // 본부장/이사는 모든 부서를 볼 수 있음
     return options;
   };
@@ -150,16 +155,34 @@ function UsersPage() {
   };
 
   // 부서 검색 가능 여부 확인
-  const canSearchDepartment = user?.role === "ADMIN" || 
-                            user?.rank === "DIRECTOR" || 
-                            user?.rank === "GENERAL_MANAGER";
+  const canSearchDepartment =
+    user?.role === "ADMIN" ||
+    user?.rank === "DIRECTOR" ||
+    user?.rank === "GENERAL_MANAGER";
 
   // 검색 안내 메시지
   const getSearchHelperText = () => {
     if (user?.role === "MANAGER") {
-      return "* 이름 또는 사번으로 검색 가능합니다. 타 부서 직원은 검색되지 ���습니다.";
+      return "* 이름 또는 사번으로 검색 가능합니다. 타 부서 직원은 검색되지 습니다.";
     }
     return "";
+  };
+
+  // 검색어 입력 핸들러
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  // 검색 실행 핸들러
+  const handleSearch = () => {
+    handleFilterChange("search", searchInput);
+  };
+
+  // 엔터 키 핸들러
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
@@ -173,19 +196,29 @@ function UsersPage() {
         <Paper sx={{ p: 2, mb: 3 }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                placeholder="이름, 사번으로 검색..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Box display="flex" gap={1}>
+                <TextField
+                  fullWidth
+                  placeholder="이름(성/이름), 사번, 이메일로 검색..."
+                  value={searchInput}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleKeyPress}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleSearch}
+                  sx={{ minWidth: "80px" }}
+                >
+                  검색
+                </Button>
+              </Box>
             </Grid>
             {canSearchDepartment && (
               <Grid item xs={12} sm={4}>
@@ -198,7 +231,9 @@ function UsersPage() {
                       handleFilterChange("department", e.target.value)
                     }
                   >
-                    {user?.role === "ADMIN" && <MenuItem value="">전체</MenuItem>}
+                    {user?.role === "ADMIN" && (
+                      <MenuItem value="">전체</MenuItem>
+                    )}
                     {getDepartmentOptions()}
                   </Select>
                 </FormControl>
@@ -252,7 +287,8 @@ function UsersPage() {
                     >
                       <TableCell>{user.employee_id}</TableCell>
                       <TableCell>
-                        {user.first_name} {user.last_name}
+                        {user.last_name}
+                        {user.first_name}
                       </TableCell>
                       <TableCell>{user.department_name}</TableCell>
                       <TableCell>
