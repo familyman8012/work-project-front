@@ -276,6 +276,74 @@ function PersonalReportPage() {
     );
   }
 
+  // 부서 선택 옵션 렌더링 함수 수정
+  const getDepartmentOptions = () => {
+    if (!departments) return [];
+
+    // 본부와 팀을 구분하여 표시
+    const mainDepts = departments.filter((d: any) => d.parent === null);
+    const options: JSX.Element[] = [
+      <MenuItem key="all" value="">
+        전체 부서
+      </MenuItem>,
+    ];
+
+    mainDepts.forEach((mainDept: any) => {
+      // 본부 추가
+      options.push(
+        <MenuItem
+          key={mainDept.id}
+          value={mainDept.id}
+          sx={{
+            fontWeight: "bold",
+            backgroundColor:
+              mainDept.id === authStore.user?.department
+                ? "action.selected"
+                : "inherit",
+            "&:hover": {
+              backgroundColor:
+                mainDept.id === authStore.user?.department
+                  ? "action.selected"
+                  : "action.hover",
+            },
+          }}
+        >
+          📂 {mainDept.name}
+        </MenuItem>
+      );
+
+      // 산하 팀 추가 (들여쓰기로 구분)
+      const childDepts = departments.filter(
+        (d: any) => d.parent === mainDept.id
+      );
+      childDepts.forEach((childDept: any) => {
+        options.push(
+          <MenuItem
+            key={childDept.id}
+            value={childDept.id}
+            sx={{
+              pl: 4,
+              backgroundColor:
+                childDept.id === authStore.user?.department
+                  ? "action.selected"
+                  : "inherit",
+              "&:hover": {
+                backgroundColor:
+                  childDept.id === authStore.user?.department
+                    ? "action.selected"
+                    : "action.hover",
+              },
+            }}
+          >
+            └ {childDept.name}
+          </MenuItem>
+        );
+      });
+    });
+
+    return options;
+  };
+
   return (
     <Layout>
       <Box p={3}>
@@ -298,13 +366,15 @@ function PersonalReportPage() {
                       setSelectedDepartment(e.target.value as string);
                       setSelectedUserId(""); // 부서 변경 시 선택된 직원 초기화
                     }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 400,
+                        },
+                      },
+                    }}
                   >
-                    <MenuItem value="">전체 부서</MenuItem>
-                    {departments?.map((dept: any) => (
-                      <MenuItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </MenuItem>
-                    ))}
+                    {getDepartmentOptions()}
                   </Select>
                 </FormControl>
               </Grid>
@@ -375,7 +445,7 @@ function PersonalReportPage() {
         ) : // 보고서 내용
         report ? (
           <>
-            {/* 탭 메뉴 */}
+            {/*  메뉴 */}
             <Paper sx={{ mb: 3 }}>
               <Tabs
                 value={currentTab}
@@ -454,7 +524,7 @@ function BasicStats({
 
               • 신규 프로젝트 착수 준비 단계
               • 이전 작업들의 완료 후 과도기적 시점
-              • 작업 배정 프로세스 상의 검토 필요 시점
+              • 작업 배정 프로세 상의 검토 필요 시점
 
               이 시간을 다음과 같이 활용하실 것을 제안드립니다:
 
@@ -492,14 +562,14 @@ function BasicStats({
         - 작업 배정 프로세스 상의 검토 필요 시점
 
         2. 활용 방안
-        현재 시점을 다음과 같이 효과적으로 활용할 수 있습니다:
+        현재 시점을 음과 같이 효과적으로 활용할 수 있습니다:
 
         1) 역량 개 기회
-           - 업무 관련 교육 및 훈련 참여
+           - 업무 관련 ���육 및 훈련 참여
            - 새로운 기술 및 도구 학습
            - 자격증 취득 준비
 
-        2) 업무 프로세스 개선
+        2) 업무 프세스 개선
            - 기존 업무 수행 방식 분석 및 개선점 도출
            - 업무 매뉴얼 및 가이라인 정비
            - 업무 자동화 방안 연구
@@ -603,7 +673,7 @@ function BasicStats({
       `;
     } else if (inProgressTasks > 5) {
       return `
-        현재 진행 중인 ${inProgressTasks}건의 작업은 다소 높은 수준의 업무량을 나타냅니다.
+        현재 진행 중인 ${inProgressTasks}건의 작업은 다소 높은 수준 업무량을 나타냅니다.
         업무 부하가 증가하는 추세이므로, 다음과 같은 관리방안이 권장됩니다:
         
         1. 작업 간 우선순위 명확화
@@ -741,7 +811,7 @@ function BasicStats({
       [중장기 발전과제]
       1. 업무 수행 역량 고도화
          - 전문 강화를 위 교육 프로그램 참여
-         - 업무 관련 자증 취�� 및 스킬 향상
+         - 업무 관련 자증 취 및 스킬 향상
       
       2. 프로젝트 관리 능력 배양
          - 복잡한 다중 작업 관리 능력 향상
@@ -854,7 +924,7 @@ function TimeStats({ stats }: { stats: PersonalReport["time_stats"] }) {
             </Typography>
             <Typography variant="body1">
               현재 기간 동안의 작업 시간 기록이 없습니다. 작업이 시작되면 시간
-              관리 통계가 자동으로 생성��니다.
+              관리 통계가 자동으로 생성니다.
             </Typography>
           </Paper>
         </Grid>
@@ -1355,7 +1425,7 @@ function DistributionStats({
 
   const getStatusLabel = (status: string) => {
     const labels: { [key: string]: string } = {
-      TODO: "예정",
+      TODO: "예",
       IN_PROGRESS: "진행중",
       REVIEW: "검토중",
       DONE: "완료",
@@ -1567,7 +1637,7 @@ function ComparisonStats({ stats }: { stats: ComparisonStats }) {
         </Typography>
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          개선 및 발전 방향
+          개선 및 발��� 방향
         </Typography>
         <Box component="ul" sx={{ pl: 2 }}>
           {getImprovementSuggestions().map((item, index) => (
@@ -1806,12 +1876,29 @@ function ComparisonStats({ stats }: { stats: ComparisonStats }) {
         </Paper>
       </Grid>
 
-      {/* 분석 리포트 */}
+      {/* 분석 리포��� */}
       <Grid item xs={12}>
         <Paper sx={{ p: 3 }}>{getComparisonAnalysis()}</Paper>
       </Grid>
     </Grid>
   );
 }
+
+// 부서 계층 구조 생성 함수 추가
+const organizeHierarchy = (depts: any[]) => {
+  // 본부들 (parent가 null인 부서들)
+  const headquarters =
+    depts?.results?.filter((dept) => dept.parent === null) || [];
+
+  // 각 본부의 하위 팀들 찾기
+  const getTeams = (hqId: number) => {
+    return depts?.results?.filter((dept) => dept.parent === hqId) || [];
+  };
+
+  return headquarters.map((hq) => ({
+    ...hq,
+    teams: getTeams(hq.id),
+  }));
+};
 
 export default withAuth(PersonalReportPage);

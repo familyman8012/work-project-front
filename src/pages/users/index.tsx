@@ -195,7 +195,43 @@ function UsersPage() {
         {/* 필터 섹션 */}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
+            {canSearchDepartment && (
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>부서</InputLabel>
+                  <Select
+                    value={filters.department}
+                    label="부서"
+                    onChange={(e) =>
+                      handleFilterChange("department", e.target.value)
+                    }
+                  >
+                    {user?.role === "ADMIN" && (
+                      <MenuItem value="">전체</MenuItem>
+                    )}
+                    {getDepartmentOptions()}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth>
+                <InputLabel>직급</InputLabel>
+                <Select
+                  value={filters.rank}
+                  label="직급"
+                  onChange={(e) => handleFilterChange("rank", e.target.value)}
+                >
+                  <MenuItem value="">전체</MenuItem>
+                  {RANK_OPTIONS.map((rank) => (
+                    <MenuItem key={rank.value} value={rank.value}>
+                      {rank.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
               <Box display="flex" gap={1}>
                 <TextField
                   fullWidth
@@ -219,42 +255,6 @@ function UsersPage() {
                   검색
                 </Button>
               </Box>
-            </Grid>
-            {canSearchDepartment && (
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
-                  <InputLabel>부서</InputLabel>
-                  <Select
-                    value={filters.department}
-                    label="부서"
-                    onChange={(e) =>
-                      handleFilterChange("department", e.target.value)
-                    }
-                  >
-                    {user?.role === "ADMIN" && (
-                      <MenuItem value="">전체</MenuItem>
-                    )}
-                    {getDepartmentOptions()}
-                  </Select>
-                </FormControl>
-              </Grid>
-            )}
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel>직급</InputLabel>
-                <Select
-                  value={filters.rank}
-                  label="직급"
-                  onChange={(e) => handleFilterChange("rank", e.target.value)}
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  {RANK_OPTIONS.map((rank) => (
-                    <MenuItem key={rank.value} value={rank.value}>
-                      {rank.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
             </Grid>
           </Grid>
         </Paper>

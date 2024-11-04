@@ -165,6 +165,26 @@ const TaskFilters = ({
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+        {/* 부서 필터 */}
+        {!hideFilters.includes("department") && departments && (
+          <FormControl size="small" sx={{ minWidth: 250 }}>
+            <InputLabel>부서</InputLabel>
+            <Select
+              value={filters.department}
+              label="부서"
+              onChange={handleDepartmentChange}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    maxHeight: 400,
+                  },
+                },
+              }}
+            >
+              {renderDepartmentOptions()}
+            </Select>
+          </FormControl>
+        )}
         {/* 검색창 수정 */}
         <TextField
           size="small"
@@ -215,26 +235,6 @@ const TaskFilters = ({
               <MenuItem value="MEDIUM">중간</MenuItem>
               <MenuItem value="HIGH">높음</MenuItem>
               <MenuItem value="URGENT">긴급</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-        {/* 부서 필터 */}
-        {!hideFilters.includes("department") && departments && (
-          <FormControl size="small" sx={{ minWidth: 250 }}>
-            <InputLabel>부서</InputLabel>
-            <Select
-              value={filters.department}
-              label="부서"
-              onChange={handleDepartmentChange}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    maxHeight: 400,
-                  },
-                },
-              }}
-            >
-              {renderDepartmentOptions()}
             </Select>
           </FormControl>
         )}
