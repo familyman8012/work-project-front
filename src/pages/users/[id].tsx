@@ -111,7 +111,9 @@ function UserDetailPage() {
   const { data: statsDetail } = useQuery({
     queryKey: ["userStatsDetail", id],
     queryFn: async () => {
-      const response = await client.get(`/api/users/${id}/tasks_statistics_detail/`);
+      const response = await client.get(
+        `/api/users/${id}/tasks_statistics_detail/`
+      );
       return response.data;
     },
     enabled: !!id,
@@ -290,29 +292,37 @@ function UserDetailPage() {
                   </Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography>중간</Typography>
-                    <Typography>{statistics.tasks_by_priority.MEDIUM}</Typography>
+                    <Typography>
+                      {statistics.tasks_by_priority.MEDIUM}
+                    </Typography>
                   </Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography>낮음</Typography>
                     <Typography>{statistics.tasks_by_priority.LOW}</Typography>
                   </Box>
-                  
+
                   <Divider sx={{ my: 2 }} />
-                  
+
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography color="text.secondary">평균 점수</Typography>
-                    <Typography 
-                      color={statsDetail?.avg_score >= 4 ? "success.main" : "text.primary"}
+                    <Typography
+                      color={
+                        statsDetail?.avg_score >= 4
+                          ? "success.main"
+                          : "text.primary"
+                      }
                       fontWeight="bold"
                     >
-                      {statsDetail?.avg_score?.toFixed(1) || '-'} / 5.0
+                      {statsDetail?.avg_score?.toFixed(1) || "-"} / 5.0
                     </Typography>
                   </Box>
-                  
+
                   <Box display="flex" justifyContent="space-between" mb={1}>
-                    <Typography color="text.secondary">평균 소요시간</Typography>
+                    <Typography color="text.secondary">
+                      평균 소요시간
+                    </Typography>
                     <Typography>
-                      {statsDetail?.avg_completion_time?.toFixed(1) || '-'}시간
+                      {statsDetail?.avg_completion_time?.toFixed(1) || "-"}시간
                     </Typography>
                   </Box>
                 </Box>
@@ -321,8 +331,8 @@ function UserDetailPage() {
           </Grid>
         </Grid>
 
-         {/* 작업 통계 상세 정보 */}
-         <Paper sx={{ p: 3, mb: 3 }}>
+        {/* 작업 통계 상세 정보 */}
+        <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             작업 통계 상세
           </Typography>
@@ -336,8 +346,10 @@ function UserDetailPage() {
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
-                      data={Object.entries(statsDetail?.priority_distribution || {})
-                        .filter(([_, value]) => value > 0)
+                      data={Object.entries(
+                        statsDetail?.priority_distribution || {}
+                      )
+                        .filter(([_, value]) => Number(value) > 0)
                         .map(([key, value]) => ({
                           name: key,
                           value,
@@ -345,15 +357,22 @@ function UserDetailPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) =>
+                        `${name} (${(percent * 100).toFixed(0)}%)`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {Object.entries(statsDetail?.priority_distribution || {})
-                        .filter(([_, value]) => value > 0)
+                        .filter(([_, value]) => Number(value) > 0)
                         .map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS.priority[index % COLORS.priority.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              COLORS.priority[index % COLORS.priority.length]
+                            }
+                          />
                         ))}
                     </Pie>
                     <Tooltip />
@@ -371,8 +390,10 @@ function UserDetailPage() {
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
-                      data={Object.entries(statsDetail?.difficulty_distribution || {})
-                        .filter(([_, value]) => value > 0)
+                      data={Object.entries(
+                        statsDetail?.difficulty_distribution || {}
+                      )
+                        .filter(([_, value]) => Number(value) > 0)
                         .map(([key, value]) => ({
                           name: key,
                           value,
@@ -380,15 +401,26 @@ function UserDetailPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) =>
+                        `${name} (${(percent * 100).toFixed(0)}%)`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {Object.entries(statsDetail?.difficulty_distribution || {})
-                        .filter(([_, value]) => value > 0)
+                      {Object.entries(
+                        statsDetail?.difficulty_distribution || {}
+                      )
+                        .filter(([_, value]) => Number(value) > 0)
                         .map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS.difficulty[index % COLORS.difficulty.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              COLORS.difficulty[
+                                index % COLORS.difficulty.length
+                              ]
+                            }
+                          />
                         ))}
                     </Pie>
                     <Tooltip />
@@ -396,43 +428,41 @@ function UserDetailPage() {
                 </ResponsiveContainer>
               </Box>
             </Grid>
-
-           
           </Grid>
         </Paper>
 
-    
         <Grid container spacing={3}>
-         {/* 평균 작업 완료 시간 */}
-         <Grid item xs={12} md={6}>
-          
-              <Card>
-                <CardContent>
-                  <Typography color="text.secondary" gutterBottom>
-                    평균 작업 완료 시간
-                  </Typography>
-                  <Typography variant="h4">
-                    {statsDetail?.avg_completion_time.toFixed(1)}시간
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+          {/* 평균 작업 완료 시간 */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  평균 작업 완료 시간
+                </Typography>
+                <Typography variant="h4">
+                  {statsDetail?.avg_completion_time.toFixed(1)}시간
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-            {/* 지연율 */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography color="text.secondary" gutterBottom>
-                    작업 지연율
-                  </Typography>
-                  <Typography variant="h4" color={statsDetail?.delay_rate > 30 ? "error" : "inherit"}>
-                    {statsDetail?.delay_rate.toFixed(1)}%
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            </Grid>
-       
+          {/* 지연율 */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  작업 지연율
+                </Typography>
+                <Typography
+                  variant="h4"
+                  color={statsDetail?.delay_rate > 30 ? "error" : "inherit"}
+                >
+                  {statsDetail?.delay_rate.toFixed(1)}%
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
         {/* 현재 진행중인 작업 */}
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -441,10 +471,10 @@ function UserDetailPage() {
           </Typography>
           {currentTasks?.length > 0 ? (
             currentTasks.map((task: any) => (
-              <TaskCard 
-                key={task.id} 
+              <TaskCard
+                key={task.id}
                 task={task}
-                showDates  // 날짜 표시 prop 추가
+                showDates // 날짜 표시 prop 추가
               />
             ))
           ) : (
@@ -462,10 +492,10 @@ function UserDetailPage() {
           </Box>
           {delayedTasks?.length > 0 ? (
             delayedTasks.map((task: any) => (
-              <TaskCard 
-                key={task.id} 
+              <TaskCard
+                key={task.id}
                 task={task}
-                showDates  // 날짜 표시 prop 추가
+                showDates // 날짜 표시 prop 추가
               />
             ))
           ) : (
@@ -483,11 +513,11 @@ function UserDetailPage() {
           </Box>
           {completedTasks?.length > 0 ? (
             completedTasks.map((task: any) => (
-              <TaskCard 
-                key={task.id} 
+              <TaskCard
+                key={task.id}
                 task={task}
-                showDates  // 날짜 표시 prop 추가
-                showScore  // 작업 점수 표시 prop 추가
+                showDates // 날짜 표시 prop 추가
+                showScore // 작업 점수 표시 prop 추가
               />
             ))
           ) : (
@@ -496,8 +526,6 @@ function UserDetailPage() {
             </Typography>
           )}
         </Paper>
-
-       
       </Box>
     </Layout>
   );

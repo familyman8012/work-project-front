@@ -11,10 +11,10 @@ export const getTaskStatusText = (status: string) => {
 
 export const getTaskPriorityText = (priority: string) => {
   const priorityMap: { [key: string]: string } = {
-    LOW: "우선순위: 낮음",
-    MEDIUM: "우선순위: 보통",
-    HIGH: "우선순위: 높음",
-    URGENT: "우선순위: 긴급",
+    LOW: "낮음",
+    MEDIUM: "보통",
+    HIGH: "높음",
+    URGENT: "긴급",
   };
   return priorityMap[priority] || priority;
 };

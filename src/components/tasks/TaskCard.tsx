@@ -103,7 +103,7 @@ export default function TaskCard({
           </Box>
           <Chip
             icon={<PriorityHigh />}
-            label={getTaskPriorityText(task.priority)}
+            label={task.priority}
             size="small"
             sx={{
               backgroundColor: getPriorityColor(task.priority),
