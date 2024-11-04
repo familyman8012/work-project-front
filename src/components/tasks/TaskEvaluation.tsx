@@ -17,11 +17,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  IconButton,
+  Alert,
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/lib/api/client";
 import { format } from "date-fns";
-import { Person } from "@mui/icons-material";
+import { Person, Edit, Delete } from "@mui/icons-material";
+import { toast } from "react-toastify";
+import { authStore } from "@/stores/AuthStore";
 
 interface TaskEvaluation {
   id: number;
@@ -35,6 +39,8 @@ interface TaskEvaluation {
 
 interface TaskEvaluationProps {
   taskId: number;
+  taskDepartment: number;
+  taskDepartmentParentId: number | null;
 }
 
 const DIFFICULTY_OPTIONS = [
@@ -44,12 +50,52 @@ const DIFFICULTY_OPTIONS = [
   { value: "VERY_HARD", label: "매우 어려움" },
 ];
 
-export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
+export default function TaskEvaluation({
+  taskId,
+  taskDepartment,
+  taskDepartmentParentId,
+}: TaskEvaluationProps) {
+  const user = authStore.user;
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [difficulty, setDifficulty] = useState("MEDIUM");
   const [performanceScore, setPerformanceScore] = useState<number>(3);
   const [feedback, setFeedback] = useState("");
+  const [selectedEvaluation, setSelectedEvaluation] =
+    useState<TaskEvaluation | null>(null);
+
+  // 평가 섹션 표시 여부 확인
+  const canViewEvaluations = () => {
+    if (!user || !taskDepartment) return false;
+
+    // 일반 직원은 볼 수 없음
+    if (user.role === "EMPLOYEE") return false;
+
+    // 관리자는 모든 평가를 볼 수 있음
+    if (user.role === "ADMIN") return true;
+
+    // 본부장/이사인 경우
+    if (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER") {
+      // 자신의 본부에 속한 작업인 경우
+      if (user.department === taskDepartmentParentId) return true;
+      // 자신이 팀장인 경우 자신의 팀 작업만
+      if (user.department === taskDepartment) return true;
+    }
+
+    // 팀장인 경우 자신의 팀 작업만
+    if (user.role === "MANAGER" && user.department === taskDepartment) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // 평가 수정/삭제 권한 확인
+  const canManageEvaluation = (evaluatorId: number) => {
+    if (!user) return false;
+    if (user.role === "ADMIN") return true;
+    return evaluatorId === user.id;
+  };
 
   // 평가 목록 조회
   const { data: evaluations, isLoading } = useQuery({
@@ -59,6 +105,59 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
         `/api/task-evaluations/?task=${taskId}`
       );
       return response.data.results;
+    },
+    enabled: canViewEvaluations(),
+  });
+
+  // 평가 삭제 mutation
+  const deleteEvaluationMutation = useMutation({
+    mutationFn: async (evaluationId: number) => {
+      await client.delete(`/api/task-evaluations/${evaluationId}/`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["taskEvaluations", taskId] });
+      toast.success("평가가 삭제되었습니다.");
+    },
+  });
+
+  // 표시할 평가 필터링
+  const getVisibleEvaluations = () => {
+    if (!evaluations) return [];
+
+    // 관리자는 모든 평가를 볼 수 있음
+    if (user?.role === "ADMIN") return evaluations;
+
+    // 본부장/이사는 모든 평가를 볼 수 있음
+    if (user?.rank === "DIRECTOR" || user?.rank === "GENERAL_MANAGER") {
+      return evaluations;
+    }
+
+    // 팀장은 자신의 평가만 볼 수 있음
+    return evaluations.filter(
+      (evaluation: TaskEvaluation) => evaluation.evaluator === user?.id
+    );
+  };
+
+  const visibleEvaluations = getVisibleEvaluations();
+
+  // 평가 수정 mutation
+  const updateEvaluationMutation = useMutation({
+    mutationFn: async (data: {
+      id: number;
+      difficulty: string;
+      performance_score: number;
+      feedback: string;
+    }) => {
+      return client.patch(`/api/task-evaluations/${data.id}/`, {
+        difficulty: data.difficulty,
+        performance_score: data.performance_score,
+        feedback: data.feedback,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["taskEvaluations", taskId] });
+      handleCloseDialog();
+      toast.success("평가가 수정되었습니다.");
     },
   });
 
@@ -83,24 +182,29 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
     },
   });
 
+  // 평가 섹션 자체를 표시하지 않음
+  if (!canViewEvaluations()) {
+    return null;
+  }
+
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    setSelectedEvaluation(null);
     setDifficulty("MEDIUM");
     setPerformanceScore(3);
     setFeedback("");
   };
 
-  const handleSubmit = () => {
-    createEvaluationMutation.mutate({
-      task: taskId,
-      difficulty,
-      performance_score: performanceScore,
-      feedback,
-    });
+  const handleEdit = (evaluation: TaskEvaluation) => {
+    setSelectedEvaluation(evaluation);
+    setDifficulty(evaluation.difficulty);
+    setPerformanceScore(evaluation.performance_score);
+    setFeedback(evaluation.feedback);
+    setIsDialogOpen(true);
   };
 
   const handlePerformanceScoreChange = (
@@ -109,6 +213,26 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
     const value = parseInt(e.target.value);
     if (value >= 1 && value <= 5) {
       setPerformanceScore(value);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (selectedEvaluation) {
+      // 수정
+      updateEvaluationMutation.mutate({
+        id: selectedEvaluation.id,
+        difficulty,
+        performance_score: performanceScore,
+        feedback,
+      });
+    } else {
+      // 새로 생성
+      createEvaluationMutation.mutate({
+        task: taskId,
+        difficulty,
+        performance_score: performanceScore,
+        feedback,
+      });
     }
   };
 
@@ -122,20 +246,17 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        alignItems="center"
-        mb={2}
-      >
-        <Typography variant="h6"  sx={{ mr: "1rem" }}>작업 평가</Typography>
+      <Box display="flex" alignItems="center" mb={2}>
+        <Typography variant="h6" sx={{ mr: "1rem" }}>
+          작업 평가
+        </Typography>
         <Button variant="contained" onClick={handleOpenDialog}>
           평가하기
         </Button>
       </Box>
 
-      {/* 평가 목록 */}
-      {/* <List>
-        {evaluations?.map((evaluation: TaskEvaluation) => (
+      <List>
+        {visibleEvaluations.map((evaluation: TaskEvaluation) => (
           <Paper key={evaluation.id} sx={{ mb: 2 }}>
             <ListItem
               sx={{ flexDirection: "column", alignItems: "flex-start" }}
@@ -152,9 +273,33 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
                     {evaluation.evaluator_name}
                   </Typography>
                 </Box>
-                <Typography variant="caption" color="text.secondary">
-                  {format(new Date(evaluation.created_at), "yyyy-MM-dd HH:mm")}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="caption" color="text.secondary">
+                    {format(
+                      new Date(evaluation.created_at),
+                      "yyyy-MM-dd HH:mm"
+                    )}
+                  </Typography>
+                  {canManageEvaluation(evaluation.evaluator) && (
+                    <>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEdit(evaluation)}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() =>
+                          deleteEvaluationMutation.mutate(evaluation.id)
+                        }
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
+                </Box>
               </Box>
 
               <Box display="flex" gap={3} mb={1}>
@@ -187,21 +332,32 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
             </ListItem>
           </Paper>
         ))}
-        {evaluations?.length === 0 && (
+        {visibleEvaluations.length === 0 && (
           <Typography color="text.secondary" align="center">
             아직 평가가 없습니다.
           </Typography>
         )}
-      </List> */}
 
-      {/* 평가 입력 다이얼로그 */}
+        {/* 팀장에게 상급자 평가 존재 알림 */}
+        {user?.role === "MANAGER" &&
+          evaluations?.length > visibleEvaluations.length && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              {evaluations.length - visibleEvaluations.length}개의 평가 기록이
+              있습니다.
+            </Alert>
+          )}
+      </List>
+
+      {/* 평가 입력/수정 다이얼로그 */}
       <Dialog
         open={isDialogOpen}
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>작업 평가</DialogTitle>
+        <DialogTitle>
+          {selectedEvaluation ? "평가 수정" : "작업 평가"}
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
             <FormControl fullWidth>
@@ -246,9 +402,12 @@ export default function TaskEvaluation({ taskId }: TaskEvaluationProps) {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={createEvaluationMutation.isPending}
+            disabled={
+              createEvaluationMutation.isPending ||
+              updateEvaluationMutation.isPending
+            }
           >
-            평가 제출
+            {selectedEvaluation ? "수정" : "평가 제출"}
           </Button>
         </DialogActions>
       </Dialog>

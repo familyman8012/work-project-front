@@ -83,9 +83,9 @@ function TaskDetailPage() {
 
   // handleEditChange 함수 추가
   const handleEditChange = (field: string, value: any) => {
-    setEditedTask(prev => ({
+    setEditedTask((prev) => ({
       ...prev,
-      [field]: value || '' 
+      [field]: value || "",
     }));
   };
 
@@ -126,10 +126,13 @@ function TaskDetailPage() {
     if (!authStore.user || !task) return false;
 
     // 이사/본부장인 경우
-    if (authStore.user.rank === "DIRECTOR" || authStore.user.rank === "GENERAL_MANAGER") {
+    if (
+      authStore.user.rank === "DIRECTOR" ||
+      authStore.user.rank === "GENERAL_MANAGER"
+    ) {
       // 자신이 속한 본부의 id
       const userDeptId = authStore.user.department;
-      
+
       // 작업 담당자의 부서 정보
       const taskDeptId = task.department;
 
@@ -184,10 +187,15 @@ function TaskDetailPage() {
     }
 
     // 이사/본부장은 자신의 작업과 부서 내 작업의 우선순위 수정 가능
-    if (authStore.user?.rank === "DIRECTOR" || authStore.user?.rank === "GENERAL_MANAGER") {
+    if (
+      authStore.user?.rank === "DIRECTOR" ||
+      authStore.user?.rank === "GENERAL_MANAGER"
+    ) {
       if (task?.department === authStore.user.department) {
         if (isOwnTask()) {
-          return ["status", "actual_hours", "difficulty", "priority"].includes(fieldName);
+          return ["status", "actual_hours", "difficulty", "priority"].includes(
+            fieldName
+          );
         }
         return ["priority"].includes(fieldName);
       }
@@ -197,7 +205,9 @@ function TaskDetailPage() {
     if (authStore.user?.role === "MANAGER") {
       if (task?.department === authStore.user.department) {
         if (isOwnTask()) {
-          return ["status", "actual_hours", "difficulty", "priority"].includes(fieldName);
+          return ["status", "actual_hours", "difficulty", "priority"].includes(
+            fieldName
+          );
         }
         return ["priority"].includes(fieldName);
       }
@@ -257,7 +267,7 @@ function TaskDetailPage() {
   return (
     <Layout>
       <Box p={3}>
-        <Paper sx={{ p: 3, border:"1px solid #e0e0e0"}}>
+        <Paper sx={{ p: 3, border: "1px solid #e0e0e0" }}>
           <Box
             display="flex"
             justifyContent="space-between"
@@ -268,20 +278,19 @@ function TaskDetailPage() {
               {task.title}
             </Typography>
             <Box>
-               {/* 인라인 수정 버튼 (자신의 작업인 경우) */}
-               {canInlineEdit() && !isEditing && (
+              {/* 인라인 수정 버튼 (자신의 작업인 경우) */}
+              {canInlineEdit() && !isEditing && (
                 <Button
                   variant="outlined"
                   startIcon={<EditIcon />}
                   onClick={() => setIsEditing(true)}
                   sx={{ mr: 1 }}
-                 
                 >
                   Quick 수정
                 </Button>
-              )} 
-               {/* 인라인 수정 중인 경우의 버튼들 */}
-               {isEditing && (
+              )}
+              {/* 인라인 수정 중인 경우의 버튼들 */}
+              {isEditing && (
                 <>
                   <Button
                     variant="outlined"
@@ -302,8 +311,6 @@ function TaskDetailPage() {
                   </Button>
                 </>
               )}
-              
-             
 
               {/* 삭제 버튼 (관리자 또는 부서 상급자인 경우) */}
               {(isAdmin() || isDepartmentSuperior()) && (
@@ -316,8 +323,7 @@ function TaskDetailPage() {
                 >
                   삭제
                 </Button>
-              )} 
-              
+              )}
             </Box>
           </Box>
 
@@ -328,29 +334,32 @@ function TaskDetailPage() {
           )}
 
           <Grid container spacing={3}>
-          <Grid item xs={12} md={2}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            <Grid item xs={12} md={2}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 담당자
               </Typography>
               <Typography>{task.assignee_full_name}</Typography>
             </Grid>
 
             <Grid item xs={12} md={2}>
-              
               {isEditing && canEditField("status") ? (
                 <FormControl fullWidth>
-              <InputLabel>상태</InputLabel>
-                <Select
-                  value={editedTask.status || task.status}
-                  label="상태"
-                  onChange={(e) => handleEditChange("status", e.target.value)}
-                >
-                  <MenuItem value="TODO">할 일</MenuItem>
-                  <MenuItem value="IN_PROGRESS">진행 중</MenuItem>
-                  <MenuItem value="REVIEW">검토</MenuItem>
-                  <MenuItem value="DONE">완료</MenuItem>
-                  <MenuItem value="HOLD">보류</MenuItem>
-                </Select>
+                  <InputLabel>상태</InputLabel>
+                  <Select
+                    value={editedTask.status || task.status}
+                    label="상태"
+                    onChange={(e) => handleEditChange("status", e.target.value)}
+                  >
+                    <MenuItem value="TODO">할 일</MenuItem>
+                    <MenuItem value="IN_PROGRESS">진행 중</MenuItem>
+                    <MenuItem value="REVIEW">검토</MenuItem>
+                    <MenuItem value="DONE">완료</MenuItem>
+                    <MenuItem value="HOLD">보류</MenuItem>
+                  </Select>
                 </FormControl>
               ) : (
                 <Box sx={{ mt: 1 }}>
@@ -362,20 +371,28 @@ function TaskDetailPage() {
                   </Typography>
                 </Box>
               )}
-           
-          </Grid>
+            </Grid>
 
             <Grid item xs={12} md={4}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                시작일 ~ 마감일 
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
+                시작일 ~ 마감일
               </Typography>
               <Typography>
-                {format(new Date(task.start_date), "yyyy-MM-dd")} ~ {format(new Date(task.due_date), "yyyy-MM-dd")}
+                {format(new Date(task.start_date), "yyyy-MM-dd")} ~{" "}
+                {format(new Date(task.due_date), "yyyy-MM-dd")}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={2}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 예상시간
               </Typography>
               <Typography>{task.estimated_hours}시간</Typography>
@@ -388,69 +405,64 @@ function TaskDetailPage() {
                   type="number"
                   label="실제 소요 시간"
                   value={editedTask.actual_hours ?? task.actual_hours ?? ""}
-                  onChange={(e) => handleEditChange("actual_hours", Number(e.target.value))}
+                  onChange={(e) =>
+                    handleEditChange("actual_hours", Number(e.target.value))
+                  }
                   InputProps={{ inputProps: { min: 0, step: 0.5 } }}
                 />
               ) : (
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     실제 소요 시간
                   </Typography>
-                  <Typography>
-                    {task.actual_hours || 0} 시간
-                  </Typography>
+                  <Typography>{task.actual_hours || 0} 시간</Typography>
                 </Box>
               )}
             </Grid>
 
-           
-          
-
-
-
             <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 설명
               </Typography>
               <Typography>{task.description}</Typography>
             </Grid>
-           
-     
-
 
             <Grid item xs={12} md={6}>
-             
-                {isEditing && canEditField("priority") ? (
-                   <FormControl fullWidth>
-                <InputLabel>우선순위</InputLabel>
+              {isEditing && canEditField("priority") ? (
+                <FormControl fullWidth>
+                  <InputLabel>우선순위</InputLabel>
                   <Select
                     value={editedTask.priority || task.priority}
                     label="우선순위"
-                    onChange={(e) => handleEditChange("priority", e.target.value)}
+                    onChange={(e) =>
+                      handleEditChange("priority", e.target.value)
+                    }
                   >
                     <MenuItem value="LOW">낮음</MenuItem>
                     <MenuItem value="MEDIUM">중간</MenuItem>
                     <MenuItem value="HIGH">높음</MenuItem>
                     <MenuItem value="URGENT">긴급</MenuItem>
                   </Select>
-                  </FormControl>
-                ) : (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      우선순위
-                    </Typography>
-                    <Typography variant="body1">
-                      {getPriorityText(task.priority)}
-                    </Typography>
-                  </Box>
-                )}
-            
+                </FormControl>
+              ) : (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    우선순위
+                  </Typography>
+                  <Typography variant="body1">
+                    {getPriorityText(task.priority)}
+                  </Typography>
+                </Box>
+              )}
             </Grid>
-
-       
-            
-
-            
 
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
@@ -460,7 +472,9 @@ function TaskDetailPage() {
                     <Select
                       value={editedTask.difficulty || task.difficulty || ""}
                       label="난이도"
-                      onChange={(e) => handleEditChange("difficulty", e.target.value)}
+                      onChange={(e) =>
+                        handleEditChange("difficulty", e.target.value)
+                      }
                     >
                       <MenuItem value="EASY">쉬움</MenuItem>
                       <MenuItem value="MEDIUM">보통</MenuItem>
@@ -470,7 +484,11 @@ function TaskDetailPage() {
                   </>
                 ) : (
                   <Box>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       난이도
                     </Typography>
                     <Typography>
@@ -480,34 +498,39 @@ function TaskDetailPage() {
                 )}
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={3} sx={{ display: "flex", justifyContent: "flex-end", height: "80%" }}>
-           
-              {/* 전체 수정 버튼 (관리자 또는 부서 상급자인 경우) */}
+            <Grid
+              item
+              xs={12}
+              md={3}
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                height: "80%",
+              }}
+            >
+              {/* 전체 수정 버튼 (관리자 또는 부서 상급자인 경��) */}
               {(isAdmin() || isDepartmentSuperior()) && (
                 <Button
                   variant="outlined"
                   color="success"
                   startIcon={<EditIcon />}
                   onClick={handleEditClick}
-                 
                 >
                   전체 수정
                 </Button>
               )}
-
             </Grid>
-
           </Grid>
         </Paper>
       </Box>
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, border:"1px solid #e0e0e0"}}>
+          <Paper sx={{ p: 3, border: "1px solid #e0e0e0" }}>
             <TaskTimeLog taskId={Number(id)} />
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, border:"1px solid #e0e0e0" }}>
+          <Paper sx={{ p: 3, border: "1px solid #e0e0e0" }}>
             <TaskHistory taskId={Number(id)} />
           </Paper>
         </Grid>
@@ -518,8 +541,12 @@ function TaskDetailPage() {
       </Box>
 
       {/* 작업 평가 섹션 추가 */}
-      <Paper sx={{ p: 3, mt: 3, border:"1px solid #e0e0e0" }}>
-        <TaskEvaluation taskId={Number(id)} />
+      <Paper sx={{ p: 3, mt: 3, border: "1px solid #e0e0e0" }}>
+        <TaskEvaluation
+          taskId={Number(id)}
+          taskDepartment={task.department}
+          taskDepartmentParentId={task.department_parent_id}
+        />
       </Paper>
 
       {/* 삭제 확인 다이얼로그 */}
