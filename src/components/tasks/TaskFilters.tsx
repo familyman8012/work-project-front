@@ -106,15 +106,13 @@ const TaskFilters = ({
     ];
 
     hierarchicalDepts.forEach((hq) => {
-      // 본부 레벨 (구분선으로 강조)
+      // 본부 레벨
       options.push(
         <MenuItem
           key={hq.id}
           value={hq.id}
           sx={{
             fontWeight: "bold",
-            borderBottom: "1px solid",
-            borderColor: "divider",
             backgroundColor:
               hq.id === currentUserDepartment ? "action.selected" : "inherit",
             "&:hover": {
@@ -136,7 +134,7 @@ const TaskFilters = ({
             key={team.id}
             value={team.id}
             sx={{
-              pl: 4,
+              pl: 4, // 들여쓰기만 적용
               backgroundColor:
                 team.id === currentUserDepartment
                   ? "action.selected"
