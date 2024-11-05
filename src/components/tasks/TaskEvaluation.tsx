@@ -64,37 +64,69 @@ export default function TaskEvaluation({
   const [selectedEvaluation, setSelectedEvaluation] =
     useState<TaskEvaluation | null>(null);
 
-  // 평가 섹션 표시 여부 확인
+  // 평가 권한 체크 함수들
   const canViewEvaluations = () => {
-    if (!user || !taskDepartment) return false;
+    if (!user) return false;
 
-    // 일반 직원은 볼 수 없음
+    // EMPLOYEE는 평가를 볼 수 없음
     if (user.role === "EMPLOYEE") return false;
 
-    // 관리자는 모든 평가를 볼 수 있음
+    // ADMIN은 모든 평가를 볼 수 있음
     if (user.role === "ADMIN") return true;
 
-    // 본부장/이사인 경우
+    // DIRECTOR/GENERAL_MANAGER는 본부 내 평가를 볼 수 있음
     if (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER") {
-      // 자신의 본부에 속한 작업인 경우
+      // 본부장인 경우 본부 직속 + 산하 팀 평가 가능
       if (user.department === taskDepartmentParentId) return true;
-      // 자신이 팀장인 경우 자신의 팀 작업만
-      if (user.department === taskDepartment) return true;
+      // 팀장인 경우 자신의 팀 평가만 가능
+      return user.department === taskDepartment;
     }
 
-    // 팀장인 경우 자신의 팀 작업만
-    if (user.role === "MANAGER" && user.department === taskDepartment) {
-      return true;
+    // MANAGER는 팀 내 평가만 볼 수 있음
+    if (user.role === "MANAGER") {
+      return user.department === taskDepartment;
     }
 
     return false;
   };
 
-  // 평가 수정/삭제 권한 확인
+  // 평가 작성 권한 체크
+  const canCreateEvaluation = () => {
+    if (!user) return false;
+
+    // EMPLOYEE는 평가 불가
+    if (user.role === "EMPLOYEE") return false;
+
+    // ADMIN은 모든 작업 평가 가능
+    if (user.role === "ADMIN") return true;
+
+    // DIRECTOR/GENERAL_MANAGER는 본부 내 작업 평가 가능
+    if (user.rank === "DIRECTOR" || user.rank === "GENERAL_MANAGER") {
+      // 본부장인 경우 본부 직속 + 산하 팀 평가 가능
+      if (user.department === taskDepartmentParentId) return true;
+      // 팀장인 경우 자신의 팀 평가만 가능
+      return user.department === taskDepartment;
+    }
+
+    // MANAGER는 팀 내 작업만 평가 가능
+    if (user.role === "MANAGER") {
+      return user.department === taskDepartment;
+    }
+
+    return false;
+  };
+
+  // 평가 관리(수정/삭제) 권한 체크
   const canManageEvaluation = (evaluatorId: number) => {
     if (!user) return false;
+
+    // 자신이 작성한 평가는 수정/삭제 가능
+    if (evaluatorId === user.id) return true;
+
+    // ADMIN은 모든 평가 관리 가능
     if (user.role === "ADMIN") return true;
-    return evaluatorId === user.id;
+
+    return false;
   };
 
   // 평가 목록 조회
@@ -250,9 +282,12 @@ export default function TaskEvaluation({
         <Typography variant="h6" sx={{ mr: "1rem" }}>
           작업 평가
         </Typography>
-        <Button variant="contained" onClick={handleOpenDialog}>
-          평가하기
-        </Button>
+        {/* 평가 작성 권한이 있는 경우만 평가하기 버튼 표시 */}
+        {canCreateEvaluation() && (
+          <Button variant="contained" onClick={handleOpenDialog}>
+            평가하기
+          </Button>
+        )}
       </Box>
 
       <List>
@@ -280,6 +315,7 @@ export default function TaskEvaluation({
                       "yyyy-MM-dd HH:mm"
                     )}
                   </Typography>
+                  {/* 평가 관리 권한이 있는 경우만 수정/삭제 버튼 표시 */}
                   {canManageEvaluation(evaluation.evaluator) && (
                     <>
                       <IconButton
@@ -349,68 +385,72 @@ export default function TaskEvaluation({
       </List>
 
       {/* 평가 입력/수정 다이얼로그 */}
-      <Dialog
-        open={isDialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {selectedEvaluation ? "평가 수정" : "작업 평가"}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel>난이도</InputLabel>
-              <Select
-                value={difficulty}
-                label="난이도"
-                onChange={(e) => setDifficulty(e.target.value)}
-              >
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      {canCreateEvaluation() && (
+        <Dialog
+          open={isDialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            {selectedEvaluation ? "평가 수정" : "작업 평가"}
+          </DialogTitle>
+          <DialogContent>
+            <Box
+              sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}
+            >
+              <FormControl fullWidth>
+                <InputLabel>난이도</InputLabel>
+                <Select
+                  value={difficulty}
+                  label="난이도"
+                  onChange={(e) => setDifficulty(e.target.value)}
+                >
+                  {DIFFICULTY_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <TextField
-              label="성과 점수"
-              type="number"
-              value={performanceScore}
-              onChange={handlePerformanceScoreChange}
-              fullWidth
-              InputProps={{
-                inputProps: { min: 1, max: 5 },
-              }}
-              helperText="1점(매우 미흡) ~ 5점(매우 우수)"
-            />
+              <TextField
+                label="성과 점수"
+                type="number"
+                value={performanceScore}
+                onChange={handlePerformanceScoreChange}
+                fullWidth
+                InputProps={{
+                  inputProps: { min: 1, max: 5 },
+                }}
+                helperText="1점(매우 미흡) ~ 5점(매우 우수)"
+              />
 
-            <TextField
-              label="피드백"
-              multiline
-              rows={4}
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>취소</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={
-              createEvaluationMutation.isPending ||
-              updateEvaluationMutation.isPending
-            }
-          >
-            {selectedEvaluation ? "수정" : "평가 제출"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <TextField
+                label="피드백"
+                multiline
+                rows={4}
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                fullWidth
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>취소</Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={
+                createEvaluationMutation.isPending ||
+                updateEvaluationMutation.isPending
+              }
+            >
+              {selectedEvaluation ? "수정" : "평가 제출"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }

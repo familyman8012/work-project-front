@@ -37,11 +37,38 @@ function UserManagePage() {
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 권한 체크
-  const canManageUsers =
-    authStore.user?.role === "ADMIN" ||
-    authStore.user?.rank === "DIRECTOR" ||
-    authStore.user?.rank === "GENERAL_MANAGER";
+  // 권한 체크 함수들
+  const canManageUsers = () => {
+    const user = authStore.user;
+    if (!user) return false;
+    return (
+      user.role === "ADMIN" ||
+      user.rank === "DIRECTOR" ||
+      user.rank === "GENERAL_MANAGER"
+    );
+  };
+
+  const canEditUser = (targetUser: any) => {
+    const user = authStore.user;
+    if (!user) return false;
+
+    // ADMIN과 DIRECTOR/GENERAL_MANAGER만 수정 가능
+    return (
+      user.role === "ADMIN" ||
+      user.rank === "DIRECTOR" ||
+      user.rank === "GENERAL_MANAGER"
+    );
+  };
+
+  const canDeleteUser = () => {
+    const user = authStore.user;
+    if (!user) return false;
+    return (
+      user.role === "ADMIN" ||
+      user.rank === "DIRECTOR" ||
+      user.rank === "GENERAL_MANAGER"
+    );
+  };
 
   // 직원 목록 조회
   const { data: usersData, isLoading } = useQuery({
@@ -152,16 +179,6 @@ function UserManagePage() {
     }
   };
 
-  if (!canManageUsers) {
-    return (
-      <Layout>
-        <Box p={3}>
-          <Alert severity="error">직원 관리 권한이 없습니다.</Alert>
-        </Box>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <Box p={3}>
@@ -171,16 +188,18 @@ function UserManagePage() {
           alignItems="center"
           mb={3}
         >
-          <Typography variant="h5">직원 관리</Typography>
-          <Button
-            variant="contained"
-            onClick={() => {
-              setSelectedUser(null);
-              setOpenForm(true);
-            }}
-          >
-            직원 등록
-          </Button>
+          <Typography variant="h5">직원 목록</Typography>
+          {canManageUsers() && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setSelectedUser(null);
+                setOpenForm(true);
+              }}
+            >
+              직원 등록
+            </Button>
+          )}
         </Box>
 
         {/* 검색 필터 추가 */}
@@ -233,18 +252,21 @@ function UserManagePage() {
                   <TableCell>{user.department_name}</TableCell>
                   <TableCell>{getRankText(user.rank)}</TableCell>
                   <TableCell>{user.email}</TableCell>
-
                   <TableCell align="center">
-                    <IconButton onClick={() => handleEdit(user)} size="small">
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(user)}
-                      size="small"
-                      color="error"
-                    >
-                      <Delete />
-                    </IconButton>
+                    {canEditUser(user) && (
+                      <IconButton onClick={() => handleEdit(user)} size="small">
+                        <Edit />
+                      </IconButton>
+                    )}
+                    {canDeleteUser() && (
+                      <IconButton
+                        onClick={() => handleDelete(user)}
+                        size="small"
+                        color="error"
+                      >
+                        <Delete />
+                      </IconButton>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -262,40 +284,44 @@ function UserManagePage() {
         </TableContainer>
 
         {/* 직원 등록/수정 폼 다이얼로그 */}
-        <UserForm
-          open={openForm}
-          onClose={() => {
-            setOpenForm(false);
-            setSelectedUser(null);
-          }}
-          onSubmit={handleSubmit}
-          initialData={selectedUser}
-        />
+        {canManageUsers() && (
+          <UserForm
+            open={openForm}
+            onClose={() => {
+              setOpenForm(false);
+              setSelectedUser(null);
+            }}
+            onSubmit={handleSubmit}
+            initialData={selectedUser}
+          />
+        )}
 
         {/* 삭제 확인 다이얼로그 */}
-        <Dialog
-          open={openDeleteDialog}
-          onClose={() => setOpenDeleteDialog(false)}
-        >
-          <Box p={3}>
-            <Typography variant="h6" gutterBottom>
-              직원 삭제
-            </Typography>
-            <Typography>정말 이 직원을 삭제하시겠습니까?</Typography>
-            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-              <Button onClick={() => setOpenDeleteDialog(false)}>취소</Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() =>
-                  selectedUser && deleteMutation.mutate(selectedUser.id)
-                }
-              >
-                삭제
-              </Button>
+        {canDeleteUser() && (
+          <Dialog
+            open={openDeleteDialog}
+            onClose={() => setOpenDeleteDialog(false)}
+          >
+            <Box p={3}>
+              <Typography variant="h6" gutterBottom>
+                직원 삭제
+              </Typography>
+              <Typography>정말 이 직원을 삭제하시겠습니까?</Typography>
+              <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                <Button onClick={() => setOpenDeleteDialog(false)}>취소</Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() =>
+                    selectedUser && deleteMutation.mutate(selectedUser.id)
+                  }
+                >
+                  삭제
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        </Dialog>
+          </Dialog>
+        )}
       </Box>
     </Layout>
   );

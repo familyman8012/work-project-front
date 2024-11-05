@@ -7,6 +7,7 @@ import {
   Box,
   LinearProgress,
   Grid,
+  Paper,
 } from "@mui/material";
 import {
   AccessTime,
@@ -26,9 +27,9 @@ import {
 } from "@/lib/getTaskStatusText";
 
 interface TaskCardProps {
-  task: any;
+  task: Task;
   showDates?: boolean;
-  showScore?: boolean;
+  clickable?: boolean;
 }
 
 const getStatusColor = (status: TaskStatus) => {
@@ -54,8 +55,8 @@ const getPriorityColor = (priority: string) => {
 
 export default function TaskCard({
   task,
-  showDates,
-  showScore,
+  showDates = true,
+  clickable = true,
 }: TaskCardProps) {
   const router = useRouter();
   const formatDate = (dateString: string) => {
@@ -65,18 +66,20 @@ export default function TaskCard({
     ? (task.actual_hours / task.estimated_hours) * 100
     : 0;
 
+  const handleClick = () => {
+    if (clickable) {
+      router.push(`/tasks/${task.id}`);
+    }
+  };
+
   return (
-    <Card
+    <Paper
       sx={{
+        p: 2,
         mb: 2,
-        borderLeft: 4,
-        borderColor: getStatusColor(task.status),
-        cursor: "pointer",
-        "&:hover": {
-          boxShadow: 6,
-        },
+        cursor: clickable ? "pointer" : "default",
       }}
-      onClick={() => router.push(`/tasks/${task.id}`)}
+      onClick={handleClick}
     >
       <CardContent>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
@@ -140,7 +143,7 @@ export default function TaskCard({
             <Typography variant="body2" color="text.secondary">
               예상 시간: {task.estimated_hours}시간{" "}
               {task.actual_hours && ` / 실제 시간: ${task.actual_hours}시간`}
-              {showScore && task.evaluation && (
+              {/* {task.e .evaluation && (
                 <Chip
                   size="small"
                   label={`${task.evaluation.performance_score}점`}
@@ -151,7 +154,7 @@ export default function TaskCard({
                   }
                   sx={{ ml: 1 }}
                 />
-              )}
+              )} */}
             </Typography>
           </Grid>
           {task.actual_hours && (
@@ -180,6 +183,6 @@ export default function TaskCard({
           </Typography>
         </Box>
       </CardContent>
-    </Card>
+    </Paper>
   );
 }

@@ -54,7 +54,7 @@ function TasksPage() {
   const [filters, setFilters] = useState<Filters>(() => {
     console.log("Setting initial filters");
     console.log("Current user department:", authStore.user?.department);
-    
+
     return {
       ...initialFilters,
       department: authStore.user?.department || "",
@@ -63,10 +63,13 @@ function TasksPage() {
 
   useEffect(() => {
     if (authStore.user?.department) {
-      console.log("Updating filters with user department:", authStore.user.department);
-      setFilters(prev => ({
+      console.log(
+        "Updating filters with user department:",
+        authStore.user.department
+      );
+      setFilters((prev) => ({
         ...prev,
-        department: Number(authStore?.user?.department) 
+        department: Number(authStore?.user?.department),
       }));
     }
   }, []);
@@ -97,7 +100,7 @@ function TasksPage() {
 
       const url = `/api/tasks/?${params.toString()}`;
       console.log("Fetching tasks with URL:", url);
-      
+
       try {
         const response = await client.get(url);
         return response.data;

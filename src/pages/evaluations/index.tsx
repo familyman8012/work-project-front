@@ -15,12 +15,15 @@ import {
   Chip,
   Pagination,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { withAuth } from "@/components/auth/withAuth";
 import Layout from "@/components/layout/Layout";
 import { client } from "@/lib/api/client";
 import { format } from "date-fns";
 import Person from "@mui/icons-material/Person";
+import { authStore } from "@/stores/AuthStore";
 
 const DIFFICULTY_OPTIONS = [
   { value: "", label: "전체" },
@@ -57,9 +60,10 @@ function EvaluationsPage() {
     difficulty: "",
     search: "",
   });
+  const user = authStore.user;
 
-  // 평가 목록 조회
-  const { data: evaluations } = useQuery({
+  // 평가 목록 조회 - 권한에 따른 필터링
+  const { data: evaluations, isLoading } = useQuery({
     queryKey: ["evaluations", filters, page],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -67,12 +71,41 @@ function EvaluationsPage() {
       if (filters.search) params.append("search", filters.search);
       params.append("page", String(page));
 
+      // 권한에 따른 추가 필터링
+      if (user?.role === "MANAGER") {
+        // 팀장은 자신의 팀 평가만 조회
+        params.append("department", String(user.department));
+      } else if (
+        user?.rank === "DIRECTOR" ||
+        user?.rank === "GENERAL_MANAGER"
+      ) {
+        // 본부장/이사는 본부 내 평가만 조회
+        if (user.department) {
+          params.append("department", String(user.department));
+          params.append("include_child_depts", "true"); // 하위 부서 포함
+        }
+      }
+      // ADMIN은 추가 필터 없이 모든 평가 조회 가능
+      // EMPLOYEE는 TaskEvaluationViewSet에서 이미 자신의 작업에 대한 평가만 필터링됨
+
       const response = await client.get(
         `/api/task-evaluations/?${params.toString()}`
       );
       return response.data;
     },
+    enabled: !!user && user.role !== "EMPLOYEE", // EMPLOYEE는 평가 목록 조회 불가
   });
+
+  // EMPLOYEE는 접근 불가
+  if (user?.role === "EMPLOYEE") {
+    return (
+      <Layout>
+        <Box p={3}>
+          <Alert severity="error">평가 목록 조회 권한이 없습니다.</Alert>
+        </Box>
+      </Layout>
+    );
+  }
 
   const handleFilterChange = (name: string, value: string) => {
     setFilters((prev) => ({
@@ -88,6 +121,68 @@ function EvaluationsPage() {
     if (score >= 2.5) return "warning";
     return "error";
   };
+
+  // 로딩 상태 처리
+  if (isLoading) {
+    return (
+      <Layout>
+        <Box p={3}>
+          <Box display="flex" justifyContent="center" p={4}>
+            <CircularProgress />
+          </Box>
+        </Box>
+      </Layout>
+    );
+  }
+
+  // 데이터가 없는 경우 처리
+  if (!evaluations?.results?.length) {
+    return (
+      <Layout>
+        <Box p={3}>
+          <Typography variant="h5" gutterBottom>
+            작업 평가 목록
+          </Typography>
+          {/* 필터 섹션은 유지 */}
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="작업 검색"
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>난이도</InputLabel>
+                  <Select
+                    value={filters.difficulty}
+                    label="난이도"
+                    onChange={(e) =>
+                      handleFilterChange("difficulty", e.target.value)
+                    }
+                  >
+                    {DIFFICULTY_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Paper>
+          <Box textAlign="center" py={4}>
+            <Typography color="text.secondary">
+              표시할 평가 내역이 없습니다.
+            </Typography>
+          </Box>
+        </Box>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -130,7 +225,7 @@ function EvaluationsPage() {
 
         {/* 평가 목록 */}
         <Grid container spacing={3}>
-          {evaluations?.results.map((evaluation: Evaluation) => (
+          {evaluations.results.map((evaluation: Evaluation) => (
             <Grid item xs={12} key={evaluation.id}>
               <Card>
                 <CardContent>
@@ -261,7 +356,7 @@ function EvaluationsPage() {
         </Grid>
 
         {/* 페이지네이션 */}
-        {evaluations?.count > 0 && (
+        {evaluations.count > 0 && (
           <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
             <Pagination
               count={Math.ceil(evaluations.count / 10)}
