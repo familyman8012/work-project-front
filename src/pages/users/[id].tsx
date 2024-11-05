@@ -46,7 +46,7 @@ const RANK_LABELS: { [key: string]: string } = {
   STAFF: "사원",
   SENIOR: "주임",
   ASSISTANT_MANAGER: "대리",
-  MANAGER: "과장",
+  MANAGER: "팀장",
   DEPUTY_GENERAL_MANAGER: "차장",
   GENERAL_MANAGER: "본부장",
   DIRECTOR: "이사",

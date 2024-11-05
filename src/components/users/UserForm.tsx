@@ -33,14 +33,17 @@ interface FormInputs {
 
 const schema = yup.object().shape({
   username: yup.string().required("사용자명은 필수입니다"),
-  email: yup.string().email("올바른 이메일 형식이 아닙니다").required("이메일은 필수입니다"),
+  email: yup
+    .string()
+    .email("올바른 이메일 형식이 아닙니다")
+    .required("이메일은 필수입니다"),
   employee_id: yup.string().required("사번은 필수입니다"),
   first_name: yup.string().required("이름은 필수입니다"),
   last_name: yup.string().required("성은 필수입니다"),
   department: yup.number().required("서는 필수입니다"),
   rank: yup.string().required("직급은 필수입니다"),
   role: yup.string().required("역할은 필수입니다"),
-  password: yup.string().when('$isNew', {
+  password: yup.string().when("$isNew", {
     is: true,
     then: (schema) => schema.required("비밀번호는 필수입니다"),
     otherwise: (schema) => schema.optional(),
@@ -54,7 +57,12 @@ interface UserFormProps {
   initialData?: FormInputs;
 }
 
-export default function UserForm({ open, onClose, onSubmit, initialData }: UserFormProps) {
+export default function UserForm({
+  open,
+  onClose,
+  onSubmit,
+  initialData,
+}: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -65,14 +73,14 @@ export default function UserForm({ open, onClose, onSubmit, initialData }: UserF
     resolver: yupResolver(schema),
     context: { isNew: !initialData },
     defaultValues: initialData || {
-      username: '',
-      email: '',
-      employee_id: '',
-      first_name: '',
-      last_name: '',
+      username: "",
+      email: "",
+      employee_id: "",
+      first_name: "",
+      last_name: "",
       department: undefined,
-      rank: '',
-      role: 'EMPLOYEE',
+      rank: "",
+      role: "EMPLOYEE",
     },
   });
 
@@ -87,16 +95,18 @@ export default function UserForm({ open, onClose, onSubmit, initialData }: UserF
 
   useEffect(() => {
     if (open) {
-      reset(initialData || {
-        username: '',
-        email: '',
-        employee_id: '',
-        first_name: '',
-        last_name: '',
-        department: undefined,
-        rank: '',
-        role: 'EMPLOYEE',
-      });
+      reset(
+        initialData || {
+          username: "",
+          email: "",
+          employee_id: "",
+          first_name: "",
+          last_name: "",
+          department: undefined,
+          rank: "",
+          role: "EMPLOYEE",
+        }
+      );
     }
   }, [open, initialData, reset]);
 
@@ -191,31 +201,31 @@ export default function UserForm({ open, onClose, onSubmit, initialData }: UserF
                   ))}
                 </Select>
                 {errors.department && (
-                  <FormHelperText>{errors.department.message as string}</FormHelperText>
+                  <FormHelperText>
+                    {errors.department.message as string}
+                  </FormHelperText>
                 )}
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.rank}>
                 <InputLabel>직급</InputLabel>
-                <Select
-                  {...register("rank")}
-                  label="직급"
-                  defaultValue=""
-                >
+                <Select {...register("rank")} label="직급" defaultValue="">
                   <MenuItem value="" disabled>
                     직급을 선택하세요
                   </MenuItem>
                   <MenuItem value="STAFF">사원</MenuItem>
                   <MenuItem value="SENIOR">주임</MenuItem>
                   <MenuItem value="ASSISTANT_MANAGER">대리</MenuItem>
-                  <MenuItem value="MANAGER">과장</MenuItem>
+                  <MenuItem value="MANAGER">팀장</MenuItem>
                   <MenuItem value="DEPUTY_GENERAL_MANAGER">차장</MenuItem>
                   <MenuItem value="GENERAL_MANAGER">본부장</MenuItem>
                   <MenuItem value="DIRECTOR">이사</MenuItem>
                 </Select>
                 {errors.rank && (
-                  <FormHelperText>{errors.rank.message as string}</FormHelperText>
+                  <FormHelperText>
+                    {errors.rank.message as string}
+                  </FormHelperText>
                 )}
               </FormControl>
             </Grid>
@@ -232,7 +242,9 @@ export default function UserForm({ open, onClose, onSubmit, initialData }: UserF
                   <MenuItem value="ADMIN">관리자</MenuItem>
                 </Select>
                 {errors.role && (
-                  <FormHelperText>{errors.role.message as string}</FormHelperText>
+                  <FormHelperText>
+                    {errors.role.message as string}
+                  </FormHelperText>
                 )}
               </FormControl>
             </Grid>
@@ -247,4 +259,4 @@ export default function UserForm({ open, onClose, onSubmit, initialData }: UserF
       </form>
     </Dialog>
   );
-} 
+}
