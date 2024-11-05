@@ -112,10 +112,9 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const response = await client.post("/api/token/", data);
-      const { access, refresh } = response.data;
+      const { access } = response.data;
 
       localStorage.setItem("access_token", access);
-      localStorage.setItem("refresh_token", refresh);
 
       const userResponse = await client.get("/api/users/me/");
       authStore.setUser(userResponse.data);
