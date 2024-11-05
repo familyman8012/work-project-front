@@ -15,10 +15,14 @@ venv\Scripts\activate
 
 python manage.py runserver
 
-
 pip install -r requirements/base.txt
 
 python manage.py runserver
+
+테스트 계정 :
+tech_head
+backend_dev2
+frontend_dev1
 
 ## 1. 인증 (Authentication)
 
