@@ -21,6 +21,7 @@ import {
   Assessment,
   GradeRounded,
   Business,
+  Psychology,
 } from "@mui/icons-material";
 import { observer } from "mobx-react";
 import { authStore } from "@/stores/AuthStore";
@@ -69,15 +70,26 @@ const Sidebar = observer(() => {
       ],
     };
 
+    const experimentSection = {
+      title: "실험",
+      items: [
+        {
+          text: "LLM 분석",
+          icon: <Psychology />,
+          path: "/experiments/llm",
+        },
+      ],
+    };
+
     const sections = [...menuSection];
 
     if (user?.role === "ADMIN" || user?.rank === "DIRECTOR") {
-      sections.push(managementSection, adminSection);
+      sections.push(managementSection, adminSection, experimentSection);
     } else if (
       user?.rank === "GENERAL_MANAGER" ||
       (user?.role === "MANAGER" && user?.rank !== "STAFF")
     ) {
-      sections.push(managementSection);
+      sections.push(managementSection, experimentSection);
     }
 
     return sections;
